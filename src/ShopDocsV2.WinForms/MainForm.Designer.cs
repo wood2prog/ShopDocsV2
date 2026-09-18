@@ -187,6 +187,7 @@ partial class MainForm
         MainMenuStrip = menuStrip;
         Text = "Shop Docs";
         MinimumSize = new Size(700, 500);
+        Icon = Icon.ExtractAssociatedIcon(System.Windows.Forms.Application.ExecutablePath);
 
         ResumeLayout(false);
         PerformLayout();
