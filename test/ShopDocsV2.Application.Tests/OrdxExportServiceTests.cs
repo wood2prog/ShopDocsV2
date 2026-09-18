@@ -1,3 +1,4 @@
+using System.Xml.Linq;
 using ShopDocsV2.Domain;
 using Xunit;
 
@@ -104,6 +105,29 @@ public class OrdxExportServiceTests
 
         Assert.Contains("Countertop: Quartz / Calacatta Bali", xml);
         Assert.Contains("Hardware: Pull / Chrome4inC-Pull / Chrome", xml);
+    }
+
+    [Fact]
+    public void BuildOrdxXml_MultiRoomDivergentFinishExport_IsWellFormedXml()
+    {
+        var kitchen = KitchenRoom();
+        var pantry = new Room
+        {
+            Id = Guid.NewGuid(),
+            Name = "Pantry",
+            SortOrder = 1,
+            ListAnswers =
+            {
+                ["cabinet_finishes"] = new List<RoomListItem> { TestFixtures.ListItem(0, ("wood", "Cherry"), ("finish", "OCS Natural Cherry")) }
+            }
+        };
+        var job = new Job { CustomerName = "Jane Doe", Rooms = { kitchen, pantry } };
+
+        var xml = _sut.BuildOrdxXml(job, _questions);
+
+        var doc = XDocument.Parse(xml); // throws on malformed XML
+        Assert.Equal("Job", doc.Root!.Name.LocalName);
+        Assert.Equal(2, doc.Root.Descendants("Rooms").Single().Elements("Room").Count());
     }
 
     /// <summary>

@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using ShopDocsV2.Application;
 using ShopDocsV2.Domain;
 
@@ -11,6 +12,7 @@ public partial class MainForm : Form
     private readonly ISpecFormattingService _specFormattingService;
     private readonly IJobPrintContentBuilder _jobPrintContentBuilder;
     private readonly IPaintColorLookupService _paintColorLookupService;
+    private readonly IOrdxExportService _ordxExportService;
     private readonly System.Windows.Forms.Timer _saveDebounceTimer;
     private Job? _currentJob;
     private QuestionSet _questionSet = new();
@@ -21,7 +23,8 @@ public partial class MainForm : Form
         ICatalogRepository catalogRepository,
         ISpecFormattingService specFormattingService,
         IJobPrintContentBuilder jobPrintContentBuilder,
-        IPaintColorLookupService paintColorLookupService)
+        IPaintColorLookupService paintColorLookupService,
+        IOrdxExportService ordxExportService)
     {
         _jobRepository = jobRepository;
         _questionSetProvider = questionSetProvider;
@@ -29,6 +32,7 @@ public partial class MainForm : Form
         _specFormattingService = specFormattingService;
         _jobPrintContentBuilder = jobPrintContentBuilder;
         _paintColorLookupService = paintColorLookupService;
+        _ordxExportService = ordxExportService;
         InitializeComponent();
 
         _saveDebounceTimer = new System.Windows.Forms.Timer { Interval = 1000 };
@@ -191,6 +195,43 @@ public partial class MainForm : Form
         SetStatus("Exported job as text");
     }
 
+    private void ExportOrdxMenuItem_Click(object? sender, EventArgs e)
+    {
+        if (_currentJob is null)
+        {
+            return;
+        }
+
+        if (!_currentJob.Rooms.Any(r => !string.IsNullOrWhiteSpace(r.Name)))
+        {
+            MessageBox.Show(this, "Add at least one named room before exporting to ORDX.", "Export ORDX",
+                MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            return;
+        }
+
+        using var dialog = new SaveFileDialog
+        {
+            Filter = "ORDX files (*.ordx)|*.ordx|All files (*.*)|*.*",
+            FileName = SuggestedOrdxFileName(_currentJob)
+        };
+        if (dialog.ShowDialog(this) != DialogResult.OK)
+        {
+            return;
+        }
+
+        File.WriteAllText(dialog.FileName, _ordxExportService.BuildOrdxXml(_currentJob, _questionSet));
+        SetStatus("Exported ORDX file");
+    }
+
+    /// <summary>Ported from the original app's suggestedFilename(): trim, strip illegal filename chars, collapse whitespace to underscores.</summary>
+    private static string SuggestedOrdxFileName(Job job)
+    {
+        var name = (job.CustomerName ?? "").Trim();
+        name = Regex.Replace(name, "[\\\\/:*?\"<>|]+", "");
+        name = Regex.Replace(name, @"\s+", "_");
+        return (string.IsNullOrEmpty(name) ? "job" : name) + ".ordx";
+    }
+
     private async void CatalogManagerMenuItem_Click(object? sender, EventArgs e)
     {
         using var catalogManagerForm = new CatalogManagerForm(_catalogRepository, _paintColorLookupService);
@@ -218,6 +259,7 @@ public partial class MainForm : Form
         printMenuItem.Enabled = hasJob;
         copyRoomMenuItem.Enabled = hasJob;
         exportTextMenuItem.Enabled = hasJob;
+        exportOrdxMenuItem.Enabled = hasJob;
         jobInfoPanel.Enabled = hasJob;
         roomsTabControl.Enabled = hasJob;
 

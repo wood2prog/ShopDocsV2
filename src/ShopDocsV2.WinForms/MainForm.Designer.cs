@@ -20,6 +20,7 @@ partial class MainForm
     private ToolStripMenuItem printMenuItem = null!;
     private ToolStripMenuItem copyRoomMenuItem = null!;
     private ToolStripMenuItem exportTextMenuItem = null!;
+    private ToolStripMenuItem exportOrdxMenuItem = null!;
     private ToolStripMenuItem toolsMenuItem = null!;
     private ToolStripMenuItem catalogManagerMenuItem = null!;
     private StatusStrip statusStrip = null!;
@@ -56,6 +57,7 @@ partial class MainForm
         printMenuItem = new ToolStripMenuItem();
         copyRoomMenuItem = new ToolStripMenuItem();
         exportTextMenuItem = new ToolStripMenuItem();
+        exportOrdxMenuItem = new ToolStripMenuItem();
         toolsMenuItem = new ToolStripMenuItem();
         catalogManagerMenuItem = new ToolStripMenuItem();
         statusStrip = new StatusStrip();
@@ -122,7 +124,8 @@ partial class MainForm
             printMenuItem,
             new ToolStripSeparator(),
             copyRoomMenuItem,
-            exportTextMenuItem
+            exportTextMenuItem,
+            exportOrdxMenuItem
         ]);
 
         printPreviewMenuItem.Text = "Print Pre&view...";
@@ -137,6 +140,9 @@ partial class MainForm
 
         exportTextMenuItem.Text = "Export &Job as .txt...";
         exportTextMenuItem.Click += ExportTextMenuItem_Click;
+
+        exportOrdxMenuItem.Text = "Export &ORDX...";
+        exportOrdxMenuItem.Click += ExportOrdxMenuItem_Click;
 
         // toolsMenuItem
         toolsMenuItem.Text = "&Tools";

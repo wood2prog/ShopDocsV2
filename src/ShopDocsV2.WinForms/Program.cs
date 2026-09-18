@@ -25,6 +25,7 @@ static class Program
         services.AddSingleton<IJobPrintContentBuilder, JobPrintContentBuilder>();
         services.AddSingleton(new HttpClient());
         services.AddSingleton<IPaintColorLookupService, CompositePaintColorClient>();
+        services.AddSingleton<IOrdxExportService, OrdxExportService>();
         services.AddTransient<MainForm>();
 
         using var provider = services.BuildServiceProvider();
