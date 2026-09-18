@@ -79,7 +79,7 @@ partial class FinishesGrid
         Controls.Add(grid);
         Controls.Add(hintLabel);
         Controls.Add(addButton);
-        AutoScaleMode = AutoScaleMode.Font;
+        AutoScaleMode = AutoScaleMode.Dpi;
         Dock = DockStyle.Fill;
 
         ((System.ComponentModel.ISupportInitialize)grid).EndInit();

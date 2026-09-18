@@ -14,7 +14,7 @@ internal static class PromptDialog
             MaximizeBox = false,
             ShowInTaskbar = false,
             ClientSize = new Size(320, 110),
-            AutoScaleMode = AutoScaleMode.Font
+            AutoScaleMode = AutoScaleMode.Dpi
         };
 
         var labelControl = new Label { Text = label, AutoSize = true, Location = new Point(12, 15) };

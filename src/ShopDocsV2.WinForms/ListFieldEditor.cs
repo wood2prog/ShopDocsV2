@@ -22,6 +22,9 @@ public partial class ListFieldEditor : UserControl
     private Action? _onAnswerChanged;
     private List<RoomListItem>? _items;
 
+    /// <summary>Autocomplete sources for catalog-backed columns that don't depend on a CatalogFilterBy sibling, built once per Bind() rather than re-resolved every time a cell enters edit mode.</summary>
+    private readonly Dictionary<string, AutoCompleteStringCollection> _unfilteredAutoCompleteCache = new();
+
     public ListFieldEditor()
     {
         InitializeComponent();
@@ -63,6 +66,20 @@ public partial class ListFieldEditor : UserControl
             room.ListAnswers[question.Id] = items;
         }
         _items = items;
+
+        _unfilteredAutoCompleteCache.Clear();
+        foreach (var field in question.ItemFields ?? [])
+        {
+            if (string.IsNullOrEmpty(field.CatalogSource) || field.CatalogFilterBy is not null ||
+                _unfilteredAutoCompleteCache.ContainsKey(field.CatalogSource))
+            {
+                continue;
+            }
+
+            var source = new AutoCompleteStringCollection();
+            source.AddRange([.. catalog.Resolve(field.CatalogSource, null)]);
+            _unfilteredAutoCompleteCache[field.CatalogSource] = source;
+        }
 
         BuildColumns();
         LoadRows();
@@ -268,19 +285,25 @@ public partial class ListFieldEditor : UserControl
             return;
         }
 
+        textBox.AutoCompleteMode = AutoCompleteMode.SuggestAppend;
+        textBox.AutoCompleteSource = AutoCompleteSource.CustomSource;
+
+        if (field.CatalogFilterBy is null)
+        {
+            // Same options every time (no sibling filter) — reuse the cache built once in Bind().
+            textBox.AutoCompleteCustomSource = _unfilteredAutoCompleteCache[field.CatalogSource];
+            return;
+        }
+
         string? filterValue = null;
-        if (field.CatalogFilterBy is not null && grid.CurrentCell?.OwningRow?.Tag is RoomListItem item &&
+        if (grid.CurrentCell?.OwningRow?.Tag is RoomListItem item &&
             item.Fields.TryGetValue(field.CatalogFilterBy, out var fv))
         {
             filterValue = fv.Text;
         }
 
-        var options = _catalog!.Resolve(field.CatalogSource, filterValue);
-
-        textBox.AutoCompleteMode = AutoCompleteMode.SuggestAppend;
-        textBox.AutoCompleteSource = AutoCompleteSource.CustomSource;
         var source = new AutoCompleteStringCollection();
-        source.AddRange([.. options]);
+        source.AddRange([.. _catalog!.Resolve(field.CatalogSource, filterValue)]);
         textBox.AutoCompleteCustomSource = source;
     }
 

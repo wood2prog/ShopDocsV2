@@ -25,7 +25,7 @@ partial class RoomsTabControl
         tabControl.Dock = DockStyle.Fill;
 
         Controls.Add(tabControl);
-        AutoScaleMode = AutoScaleMode.Font;
+        AutoScaleMode = AutoScaleMode.Dpi;
         Dock = DockStyle.Fill;
 
         ResumeLayout(false);

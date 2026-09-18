@@ -51,7 +51,7 @@ partial class SimpleCatalogGrid
 
         Controls.Add(grid);
         Controls.Add(addButton);
-        AutoScaleMode = AutoScaleMode.Font;
+        AutoScaleMode = AutoScaleMode.Dpi;
         Dock = DockStyle.Fill;
 
         ((System.ComponentModel.ISupportInitialize)grid).EndInit();

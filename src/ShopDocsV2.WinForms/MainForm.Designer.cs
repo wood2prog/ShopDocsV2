@@ -23,6 +23,7 @@ partial class MainForm
     private ToolStripMenuItem exportOrdxMenuItem = null!;
     private ToolStripMenuItem toolsMenuItem = null!;
     private ToolStripMenuItem catalogManagerMenuItem = null!;
+    private ToolStripMenuItem reloadQuestionsMenuItem = null!;
     private StatusStrip statusStrip = null!;
     private ToolStripStatusLabel statusLabel = null!;
     private JobInfoPanel jobInfoPanel = null!;
@@ -60,6 +61,7 @@ partial class MainForm
         exportOrdxMenuItem = new ToolStripMenuItem();
         toolsMenuItem = new ToolStripMenuItem();
         catalogManagerMenuItem = new ToolStripMenuItem();
+        reloadQuestionsMenuItem = new ToolStripMenuItem();
         statusStrip = new StatusStrip();
         statusLabel = new ToolStripStatusLabel();
         jobInfoPanel = new JobInfoPanel();
@@ -148,11 +150,15 @@ partial class MainForm
         toolsMenuItem.Text = "&Tools";
         toolsMenuItem.DropDownItems.AddRange(
         [
-            catalogManagerMenuItem
+            catalogManagerMenuItem,
+            reloadQuestionsMenuItem
         ]);
 
         catalogManagerMenuItem.Text = "&Catalog Manager...";
         catalogManagerMenuItem.Click += CatalogManagerMenuItem_Click;
+
+        reloadQuestionsMenuItem.Text = "&Reload Questions";
+        reloadQuestionsMenuItem.Click += ReloadQuestionsMenuItem_Click;
 
         // menuStrip
         menuStrip.Items.AddRange([fileMenuItem, roomMenuItem, exportMenuItem, toolsMenuItem]);
@@ -172,7 +178,7 @@ partial class MainForm
         roomsTabControl.Dock = DockStyle.Fill;
 
         // MainForm
-        AutoScaleMode = AutoScaleMode.Font;
+        AutoScaleMode = AutoScaleMode.Dpi;
         ClientSize = new Size(900, 650);
         Controls.Add(roomsTabControl);
         Controls.Add(jobInfoPanel);

@@ -74,7 +74,7 @@ partial class CatalogManagerForm
         ]);
 
         Controls.Add(tabControl);
-        AutoScaleMode = AutoScaleMode.Font;
+        AutoScaleMode = AutoScaleMode.Dpi;
         ClientSize = new Size(700, 500);
         MinimumSize = new Size(500, 350);
         Text = "Catalog Manager";

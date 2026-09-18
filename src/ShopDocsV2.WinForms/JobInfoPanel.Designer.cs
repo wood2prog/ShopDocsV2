@@ -73,7 +73,7 @@ partial class JobInfoPanel
         AddRow(5, "Due Date", dueDateFlowPanel);
 
         Controls.Add(layoutPanel);
-        AutoScaleMode = AutoScaleMode.Font;
+        AutoScaleMode = AutoScaleMode.Dpi;
         AutoSize = true;
         AutoSizeMode = AutoSizeMode.GrowAndShrink;
 

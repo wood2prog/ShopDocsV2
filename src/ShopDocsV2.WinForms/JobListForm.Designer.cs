@@ -76,7 +76,7 @@ partial class JobListForm
         buttonPanel.Controls.Add(openButton);
 
         // JobListForm
-        AutoScaleMode = AutoScaleMode.Font;
+        AutoScaleMode = AutoScaleMode.Dpi;
         ClientSize = new Size(700, 450);
         Controls.Add(grid);
         Controls.Add(filterTextBox);

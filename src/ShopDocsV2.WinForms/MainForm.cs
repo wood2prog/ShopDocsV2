@@ -16,6 +16,7 @@ public partial class MainForm : Form
     private readonly System.Windows.Forms.Timer _saveDebounceTimer;
     private Job? _currentJob;
     private QuestionSet _questionSet = new();
+    private bool _closingAfterFlush;
 
     public MainForm(
         IJobRepository jobRepository,
@@ -35,7 +36,8 @@ public partial class MainForm : Form
         _ordxExportService = ordxExportService;
         InitializeComponent();
 
-        _saveDebounceTimer = new System.Windows.Forms.Timer { Interval = 1000 };
+        // Registered with the Designer's components container so it's disposed along with the form.
+        _saveDebounceTimer = new System.Windows.Forms.Timer(components!) { Interval = 1000 };
         _saveDebounceTimer.Tick += async (_, _) => await SaveCurrentJobAsync();
 
         jobInfoPanel.FieldsChanged += (_, _) => ScheduleAutosave();
@@ -47,7 +49,23 @@ public partial class MainForm : Form
             roomsTabControl.SetCatalog(await CatalogSnapshot.LoadAsync(_catalogRepository));
         };
 
+        FormClosing += MainForm_FormClosing;
+
         SetCurrentJob(null);
+    }
+
+    /// <summary>The debounce timer can leave up to ~1s of edits unsaved; flush them before the app actually closes.</summary>
+    private async void MainForm_FormClosing(object? sender, FormClosingEventArgs e)
+    {
+        if (_closingAfterFlush || !_saveDebounceTimer.Enabled)
+        {
+            return;
+        }
+
+        e.Cancel = true;
+        await SaveCurrentJobAsync();
+        _closingAfterFlush = true;
+        Close();
     }
 
     private async Task LoadQuestionSetAsync()
@@ -239,6 +257,45 @@ public partial class MainForm : Form
 
         // Catalog edits are committed live by the manager's grids; refresh so open room tabs pick them up.
         roomsTabControl.SetCatalog(await CatalogSnapshot.LoadAsync(_catalogRepository));
+    }
+
+    private async void ReloadQuestionsMenuItem_Click(object? sender, EventArgs e)
+    {
+        try
+        {
+            _questionSet = await _questionSetProvider.LoadAsync();
+            roomsTabControl.SetQuestionSet(_questionSet);
+            SetStatus("Reloaded questions.json");
+            return;
+        }
+        catch (QuestionSetLoadException ex)
+        {
+            var pickAnother = MessageBox.Show(this,
+                $"Could not load questions.json:\n{ex.Message}\n\nPick a different file?",
+                "Reload Questions", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+            if (pickAnother != DialogResult.Yes)
+            {
+                return;
+            }
+        }
+
+        using var openDialog = new OpenFileDialog { Filter = "JSON files (*.json)|*.json|All files (*.*)|*.*" };
+        if (openDialog.ShowDialog(this) != DialogResult.OK)
+        {
+            return;
+        }
+
+        try
+        {
+            _questionSet = await _questionSetProvider.LoadAsync(openDialog.FileName);
+            roomsTabControl.SetQuestionSet(_questionSet);
+            SetStatus("Reloaded questions.json");
+        }
+        catch (QuestionSetLoadException ex)
+        {
+            MessageBox.Show(this, $"Could not load '{openDialog.FileName}':\n{ex.Message}", "Reload Questions",
+                MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
     }
 
     private void SetCurrentJob(Job? job)
