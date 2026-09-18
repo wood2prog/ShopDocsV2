@@ -1,0 +1,85 @@
+namespace ShopDocsV2.WinForms;
+
+partial class CatalogManagerForm
+{
+    private System.ComponentModel.IContainer components = null;
+
+    private TabControl tabControl = null!;
+    private TabPage materialsTabPage = null!;
+    private TabPage finishesTabPage = null!;
+    private TabPage countertopColorsTabPage = null!;
+    private TabPage pullsTabPage = null!;
+    private TabPage hardwareColorsTabPage = null!;
+    private TabPage hingesTabPage = null!;
+    private TabPage guidesTabPage = null!;
+
+    private SimpleCatalogGrid materialsGrid = null!;
+    private FinishesGrid finishesGrid = null!;
+    private CountertopColorsGrid countertopColorsGrid = null!;
+    private SimpleCatalogGrid pullsGrid = null!;
+    private SimpleCatalogGrid hardwareColorsGrid = null!;
+    private SimpleCatalogGrid hingesGrid = null!;
+    private SimpleCatalogGrid guidesGrid = null!;
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing && (components != null))
+        {
+            components.Dispose();
+        }
+        base.Dispose(disposing);
+    }
+
+    private void InitializeComponent()
+    {
+        components = new System.ComponentModel.Container();
+
+        tabControl = new TabControl();
+        materialsTabPage = new TabPage("Materials");
+        finishesTabPage = new TabPage("Finishes");
+        countertopColorsTabPage = new TabPage("Countertop Colors");
+        pullsTabPage = new TabPage("Pulls");
+        hardwareColorsTabPage = new TabPage("Hardware Colors");
+        hingesTabPage = new TabPage("Hinges");
+        guidesTabPage = new TabPage("Guides");
+
+        materialsGrid = new SimpleCatalogGrid();
+        finishesGrid = new FinishesGrid();
+        countertopColorsGrid = new CountertopColorsGrid();
+        pullsGrid = new SimpleCatalogGrid();
+        hardwareColorsGrid = new SimpleCatalogGrid();
+        hingesGrid = new SimpleCatalogGrid();
+        guidesGrid = new SimpleCatalogGrid();
+
+        SuspendLayout();
+
+        materialsTabPage.Controls.Add(materialsGrid);
+        finishesTabPage.Controls.Add(finishesGrid);
+        countertopColorsTabPage.Controls.Add(countertopColorsGrid);
+        pullsTabPage.Controls.Add(pullsGrid);
+        hardwareColorsTabPage.Controls.Add(hardwareColorsGrid);
+        hingesTabPage.Controls.Add(hingesGrid);
+        guidesTabPage.Controls.Add(guidesGrid);
+
+        tabControl.Dock = DockStyle.Fill;
+        tabControl.TabPages.AddRange(
+        [
+            materialsTabPage,
+            finishesTabPage,
+            countertopColorsTabPage,
+            pullsTabPage,
+            hardwareColorsTabPage,
+            hingesTabPage,
+            guidesTabPage
+        ]);
+
+        Controls.Add(tabControl);
+        AutoScaleMode = AutoScaleMode.Font;
+        ClientSize = new Size(700, 500);
+        MinimumSize = new Size(500, 350);
+        Text = "Catalog Manager";
+        StartPosition = FormStartPosition.CenterParent;
+
+        ResumeLayout(false);
+    }
+}

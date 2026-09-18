@@ -1,0 +1,47 @@
+namespace ShopDocsV2.Domain;
+
+public sealed class QuestionSet
+{
+    public List<QuestionSection> Sections { get; set; } = new();
+}
+
+public sealed class QuestionSection
+{
+    public string Title { get; set; } = "";
+    public List<QuestionDef> Questions { get; set; } = new();
+}
+
+public enum QuestionType { Text, Select, Checkbox, Number, Textarea, List }
+
+public sealed class QuestionDef
+{
+    public string Id { get; set; } = "";
+    public string Label { get; set; } = "";
+    public QuestionType Type { get; set; } = QuestionType.Text;
+    public List<string>? Options { get; set; }
+    public string? Default { get; set; }
+    public ShowIfCondition? ShowIf { get; set; }
+
+    /// <summary>Name of a catalog list to source dropdown options from: materials/finishes/countertops/pulls/hardware_colors/hinges/guides.</summary>
+    public string? CatalogSource { get; set; }
+
+    /// <summary>Id of a sibling field whose value narrows CatalogSource (only countertops.color -&gt; material today).</summary>
+    public string? CatalogFilterBy { get; set; }
+
+    public bool ColorPreview { get; set; }
+    public string? Placeholder { get; set; }
+
+    /// <summary>Only used when Type == List.</summary>
+    public string? AddLabel { get; set; }
+
+    /// <summary>Only used when Type == List.</summary>
+    public List<QuestionDef>? ItemFields { get; set; }
+}
+
+public sealed class ShowIfCondition
+{
+    public string Field { get; set; } = "";
+
+    /// <summary>The value Field must equal for the dependent question to be visible. Named EqualsValue, not Equals, to avoid shadowing object.Equals.</summary>
+    public string EqualsValue { get; set; } = "";
+}

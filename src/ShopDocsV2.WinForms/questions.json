@@ -1,0 +1,119 @@
+{
+  "sections": [
+    {
+      "title": "Cabinets",
+      "questions": [
+        {
+          "id": "cabinet_style",
+          "label": "Cabinet Style",
+          "type": "select",
+          "options": ["Framed", "Frameless"],
+          "default": "Framed"
+        },
+        { "id": "cabinet_door_style", "label": "Door Style", "type": "select", "options": ["Shaker", "Raised Panel"] },
+        { "id": "soft_close", "label": "Soft-close hinges/slides", "type": "checkbox" },
+        {
+          "id": "cabinet_finishes",
+          "label": "Cabinet Finishes",
+          "type": "list",
+          "addLabel": "+ Add Cabinet Finish",
+          "itemFields": [
+            { "id": "name", "label": "Name", "placeholder": "e.g. Perimeter Upper, Perimeter Base, Island" },
+            { "id": "wood", "label": "Wood", "type": "select", "catalogSource": "materials" },
+            { "id": "finish", "label": "Finish", "type": "select", "catalogSource": "finishes", "colorPreview": true }
+          ]
+        },
+        {
+          "id": "cabinet_hardware",
+          "label": "Hardware (pulls, knobs)",
+          "type": "list",
+          "addLabel": "+ Add Hardware",
+          "itemFields": [
+            { "id": "name", "label": "Name", "placeholder": "e.g. Pull, Knob" },
+            { "id": "quantity", "label": "Qty", "type": "number", "placeholder": "Qty" },
+            { "id": "catalogItem", "label": "Catalog Item", "type": "select", "catalogSource": "pulls" },
+            { "id": "color", "label": "Color", "type": "select", "catalogSource": "hardware_colors" },
+            { "id": "model", "label": "Model Number", "placeholder": "Model # (shop notes only)" }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Countertops",
+      "questions": [
+        {
+          "id": "countertops",
+          "label": "Countertops",
+          "type": "list",
+          "addLabel": "+ Add Countertop",
+          "itemFields": [
+            {
+              "id": "material",
+              "label": "Material",
+              "type": "select",
+              "options": ["Laminate", "Granite", "Quartz", "Butcher Block", "Solid Surface", "Tile", "Other"]
+            },
+            { "id": "color", "label": "Color / Pattern", "type": "select", "catalogSource": "countertops", "catalogFilterBy": "material" },
+            {
+              "id": "edge_profile",
+              "label": "Edge Profile",
+              "type": "select",
+              "options": ["Eased", "1/4\" Round", "1/4\" Bevel", "Half Bevel", "Half Bullnose", "Full Bullnose", "Long Ogee", "Demi Bullnose"]
+            },
+            {
+              "id": "backsplash",
+              "label": "Backsplash",
+              "type": "select",
+              "options": ["4\" Backsplash", "No Backsplash", "Other - See Notes"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Sink & Faucet",
+      "questions": [
+        {
+          "id": "sinks",
+          "label": "Sinks",
+          "type": "list",
+          "addLabel": "+ Add Sink",
+          "itemFields": [
+            { "id": "sink_type", "label": "Sink Type", "placeholder": "Sink Type" },
+            { "id": "model", "label": "Model Number", "placeholder": "Model #" },
+            { "id": "faucet_style", "label": "Faucet Style", "type": "select", "options": ["Single Hole", "4\" Spread", "8\" Spread"] }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Appliances",
+      "questions": [
+        {
+          "id": "appliance_package",
+          "label": "Appliances",
+          "type": "list",
+          "addLabel": "+ Add Appliance",
+          "itemFields": [
+            { "id": "name", "label": "Appliance", "placeholder": "e.g. Range, Dishwasher" },
+            { "id": "model", "label": "Model Number", "placeholder": "Model #" }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Additional Notes",
+      "questions": [
+        {
+          "id": "notes",
+          "label": "Notes",
+          "type": "list",
+          "addLabel": "+ Add Note",
+          "itemFields": [
+            { "id": "text", "label": "Note", "placeholder": "Note" }
+          ]
+        }
+      ]
+    }
+  ]
+}
