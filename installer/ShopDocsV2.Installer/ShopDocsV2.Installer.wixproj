@@ -1,0 +1,18 @@
+<Project Sdk="WixToolset.Sdk/6.0.1">
+
+  <PropertyGroup>
+    <OutputType>Package</OutputType>
+    <OutputName>ShopDocsV2Setup</OutputName>
+    <!-- Folder produced by `dotnet publish` (self-contained, win-x64) that gets harvested into the MSI. -->
+    <PublishDir Condition="'$(PublishDir)' == ''">..\..\publish\win-x64</PublishDir>
+    <DefineConstants>PublishDir=$(PublishDir)</DefineConstants>
+    <!--
+      Per-user MSI installs place components under the user profile by
+      design. ICE38/ICE64/ICE91 assume the older "shared, per-machine"
+      component model and always fire for this scenario - suppressing them
+      is the standard practice for per-user WiX installers with many files.
+    -->
+    <SuppressIces>ICE38;ICE64;ICE91</SuppressIces>
+  </PropertyGroup>
+
+</Project>

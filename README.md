@@ -19,6 +19,18 @@ dotnet test
 dotnet run --project src/ShopDocsV2.WinForms
 ```
 
+## Building the installer
+
+`build-installer.ps1` publishes a self-contained `win-x64` build and packages it into a per-user MSI installer (no admin rights required to install):
+
+```
+.\build-installer.ps1
+```
+
+The resulting `ShopDocsV2Setup.msi` is written to `installer\ShopDocsV2.Installer\bin\Release\`. It installs to `%LocalAppData%\Programs\ShopDocsV2` with Start Menu and Desktop shortcuts, and shows up in Windows' "Apps & Features" for uninstall.
+
+Building the MSI requires the [WiX Toolset](https://wixtoolset.org/) v6 CLI (`dotnet tool install --global wix --version 6.0.1`) — `build-installer.ps1` assumes it's already installed. (WiX v7 requires accepting a separate paid EULA, so this project pins to v6.)
+
 ## Project layout
 
 | Project | Purpose |
