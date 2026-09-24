@@ -76,16 +76,21 @@ public partial class MainForm : Form
     {
         try
         {
-            _questionSet = await _questionSetProvider.LoadAsync();
+            ApplyQuestionSet(await _questionSetProvider.LoadAsync());
         }
         catch (QuestionSetLoadException ex)
         {
             MessageBox.Show(this,
                 $"Could not load questions.json:\n{ex.Message}\n\nRooms will show only their name until this is fixed.",
                 "Question Set", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            _questionSet = new QuestionSet();
+            ApplyQuestionSet(new QuestionSet());
         }
-        roomsTabControl.SetQuestionSet(_questionSet);
+    }
+
+    private void ApplyQuestionSet(QuestionSet questionSet)
+    {
+        _questionSet = questionSet;
+        roomsTabControl.SetQuestionSet(questionSet);
     }
 
     private async void NewJobMenuItem_Click(object? sender, EventArgs e)
@@ -275,8 +280,7 @@ public partial class MainForm : Form
     {
         try
         {
-            _questionSet = await _questionSetProvider.LoadAsync();
-            roomsTabControl.SetQuestionSet(_questionSet);
+            ApplyQuestionSet(await _questionSetProvider.LoadAsync());
             SetStatus("Reloaded questions.json");
             return;
         }
@@ -299,8 +303,7 @@ public partial class MainForm : Form
 
         try
         {
-            _questionSet = await _questionSetProvider.LoadAsync(openDialog.FileName);
-            roomsTabControl.SetQuestionSet(_questionSet);
+            ApplyQuestionSet(await _questionSetProvider.LoadAsync(openDialog.FileName));
             SetStatus("Reloaded questions.json");
         }
         catch (QuestionSetLoadException ex)
@@ -320,16 +323,15 @@ public partial class MainForm : Form
         roomsTabControl.LoadRooms(job?.Rooms);
 
         var hasJob = job is not null;
-        saveMenuItem.Enabled = hasJob;
-        duplicateJobMenuItem.Enabled = hasJob;
-        addRoomMenuItem.Enabled = hasJob;
-        renameRoomMenuItem.Enabled = hasJob;
-        removeRoomMenuItem.Enabled = hasJob;
-        printPreviewMenuItem.Enabled = hasJob;
-        printMenuItem.Enabled = hasJob;
-        copyRoomMenuItem.Enabled = hasJob;
-        exportTextMenuItem.Enabled = hasJob;
-        exportOrdxMenuItem.Enabled = hasJob;
+        ToolStripItem[] jobMenuItems =
+        [
+            saveMenuItem, duplicateJobMenuItem, addRoomMenuItem, renameRoomMenuItem, removeRoomMenuItem,
+            printPreviewMenuItem, printMenuItem, copyRoomMenuItem, exportTextMenuItem, exportOrdxMenuItem
+        ];
+        foreach (var item in jobMenuItems)
+        {
+            item.Enabled = hasJob;
+        }
         jobInfoPanel.Enabled = hasJob;
         roomsTabControl.Enabled = hasJob;
 
@@ -367,15 +369,19 @@ public partial class MainForm : Form
             return;
         }
 
-        if (!_currentJobIsPersisted)
+        if (!_currentJobIsPersisted && !_currentJob.HasContent)
         {
-            if (!_currentJob.HasContent)
-            {
-                SetStatus("New job (saved once you enter information)");
-                return;
-            }
+            SetStatus("New job (saved once you enter information)");
+            return;
+        }
 
-            SetStatus("Saving...");
+        SetStatus("Saving...");
+        if (_currentJobIsPersisted)
+        {
+            await _jobRepository.SaveJobAsync(_currentJob);
+        }
+        else
+        {
             // Flag first so an overlapping save (e.g. Ctrl+S during this await) updates instead of inserting twice.
             _currentJobIsPersisted = true;
             try
@@ -387,12 +393,7 @@ public partial class MainForm : Form
                 _currentJobIsPersisted = false;
                 throw;
             }
-            SetStatus($"Saved {DateTime.Now:t}");
-            return;
         }
-
-        SetStatus("Saving...");
-        await _jobRepository.SaveJobAsync(_currentJob);
         SetStatus($"Saved {DateTime.Now:t}");
     }
 
