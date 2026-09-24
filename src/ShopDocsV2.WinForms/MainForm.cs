@@ -37,6 +37,7 @@ public partial class MainForm : Form
         _paintColorLookupService = paintColorLookupService;
         _ordxExportService = ordxExportService;
         InitializeComponent();
+        WindowPlacementStore.Restore(this);
 
         // Registered with the Designer's components container so it's disposed along with the form.
         _saveDebounceTimer = new System.Windows.Forms.Timer(components!) { Interval = 1000 };
@@ -52,6 +53,7 @@ public partial class MainForm : Form
         };
 
         FormClosing += MainForm_FormClosing;
+        FormClosed += (_, _) => WindowPlacementStore.Save(this);
 
         SetCurrentJob(null);
     }
