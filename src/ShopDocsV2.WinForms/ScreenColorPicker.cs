@@ -54,7 +54,10 @@ internal static class ScreenColorPicker
         private readonly Bitmap _screenshot;
         private readonly Point _virtualOrigin;
         private readonly Rectangle _screenBounds;
-        private Rectangle _lastLoupeRect;
+        // The single source of truth for where the magnifier is drawn. OnPaint must draw at exactly the
+        // position whose rect was invalidated; reading the live Cursor.Position there instead lets the
+        // cursor move between invalidate and paint, leaving un-erased magnifier trails.
+        private Point? _loupeCursor;
 
         public event Action<Color>? Picked;
         public event Action? Cancelled;
@@ -94,16 +97,33 @@ internal static class ScreenColorPicker
         protected override void OnMouseMove(MouseEventArgs e)
         {
             base.OnMouseMove(e);
-            Invalidate(_lastLoupeRect);
-            _lastLoupeRect = LoupeRect(e.Location);
-            Invalidate(_lastLoupeRect);
+            MoveLoupe(e.Location);
         }
 
         protected override void OnMouseLeave(EventArgs e)
         {
             base.OnMouseLeave(e);
-            Invalidate(_lastLoupeRect);
-            _lastLoupeRect = Rectangle.Empty;
+            MoveLoupe(null);
+        }
+
+        private void MoveLoupe(Point? cursorClient)
+        {
+            if (_loupeCursor == cursorClient)
+            {
+                return;
+            }
+
+            if (_loupeCursor is { } old)
+            {
+                Invalidate(Rectangle.Inflate(LoupeRect(old), 2, 2));
+            }
+            _loupeCursor = cursorClient;
+            if (cursorClient is { } current)
+            {
+                Invalidate(Rectangle.Inflate(LoupeRect(current), 2, 2));
+            }
+            // Paint now rather than whenever WM_PAINT gets around to it, so the magnifier tracks smoothly.
+            Update();
         }
 
         protected override void OnMouseUp(MouseEventArgs e)
@@ -115,7 +135,7 @@ internal static class ScreenColorPicker
                 return;
             }
 
-            if (e.Button == MouseButtons.Left && TryGetPixel(Cursor.Position, out var color))
+            if (e.Button == MouseButtons.Left && TryGetPixel(PointToScreen(e.Location), out var color))
             {
                 Picked?.Invoke(color);
             }
@@ -140,13 +160,16 @@ internal static class ScreenColorPicker
                 clip.Width, clip.Height);
             g.DrawImage(_screenshot, clip, source, GraphicsUnit.Pixel);
 
-            var cursorScreen = Cursor.Position;
-            if (!_screenBounds.Contains(cursorScreen) || !TryGetPixel(cursorScreen, out var color))
+            if (_loupeCursor is not { } cursorClient)
             {
                 return;
             }
 
-            DrawLoupe(g, PointToClient(cursorScreen), cursorScreen, color);
+            var cursorScreen = PointToScreen(cursorClient);
+            if (TryGetPixel(cursorScreen, out var color))
+            {
+                DrawLoupe(g, cursorClient, cursorScreen, color);
+            }
         }
 
         private void DrawLoupe(Graphics g, Point cursorClient, Point cursorScreen, Color color)
