@@ -57,6 +57,32 @@ public partial class JobInfoPanel : UserControl
         Update(j => j.CustomerPhone = NullIfEmpty(formatted));
     }
 
+    private void CopyButton_Click(object? sender, EventArgs e)
+    {
+        if (sender is not Button { Tag: TextBox source } button)
+        {
+            return;
+        }
+
+        var text = source.Text.Trim();
+        if (text.Length == 0)
+        {
+            copyToolTip.Show("Nothing to copy", button, 0, button.Height, 1500);
+            return;
+        }
+
+        try
+        {
+            Clipboard.SetText(text);
+            copyToolTip.Show("Copied!", button, 0, button.Height, 1500);
+        }
+        catch (System.Runtime.InteropServices.ExternalException)
+        {
+            // Another process is holding the clipboard open.
+            copyToolTip.Show("Clipboard is busy, try again", button, 0, button.Height, 2000);
+        }
+    }
+
     private void DueDateCheckBox_CheckedChanged(object? sender, EventArgs e)
     {
         dueDatePicker.Enabled = dueDateCheckBox.Checked;
