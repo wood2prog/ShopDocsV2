@@ -7,7 +7,7 @@ namespace ShopDocsV2.Infrastructure.Files;
 /// </summary>
 public static class AppDataPaths
 {
-    /// <summary>Files carried over from the legacy folder: the database, its WAL side files, and the window placement.</summary>
+    /// <summary>Files carried over from the legacy folder: the database, the WAL side files older versions left beside it, and the window placement.</summary>
     private static readonly string[] MigratedFileNames = ["shopdocs.db", "shopdocs.db-wal", "shopdocs.db-shm", "window.json"];
 
     private static readonly Lazy<string> LazyDataDirectory = new(CreateDataDirectory);

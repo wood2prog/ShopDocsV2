@@ -20,7 +20,10 @@ public sealed class SqliteConnectionFactory
         connection.Open();
 
         using var pragmaCommand = connection.CreateCommand();
-        pragmaCommand.CommandText = "PRAGMA journal_mode=WAL; PRAGMA foreign_keys=ON;";
+        // Rollback journal (not WAL) keeps the database a single file at rest, so it's safe to back up or
+        // sync from Documents. WAL's concurrency gains don't matter for one user in one process. Opening a
+        // pre-1.0.12 WAL database with this checkpoints it and removes its -wal/-shm files.
+        pragmaCommand.CommandText = "PRAGMA journal_mode=DELETE; PRAGMA foreign_keys=ON;";
         pragmaCommand.ExecuteNonQuery();
 
         return connection;
