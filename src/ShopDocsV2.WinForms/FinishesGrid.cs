@@ -1,4 +1,3 @@
-using System.Drawing;
 using ShopDocsV2.Application;
 
 namespace ShopDocsV2.WinForms;
@@ -158,7 +157,7 @@ public partial class FinishesGrid : UserControl
             e.FormattingApplied = true;
         }
 
-        if (TryGetSwatchColors(rowHex, out var background, out var foreground))
+        if (SwatchColors.TryGet(rowHex, out var background, out var foreground))
         {
             e.CellStyle!.BackColor = background;
             e.CellStyle.ForeColor = foreground;
@@ -184,29 +183,6 @@ public partial class FinishesGrid : UserControl
         if (!string.IsNullOrEmpty(textToCopy))
         {
             Clipboard.SetText(textToCopy);
-        }
-    }
-
-    private static bool TryGetSwatchColors(string? hex, out Color background, out Color foreground)
-    {
-        background = default;
-        foreground = default;
-        if (string.IsNullOrEmpty(hex))
-        {
-            return false;
-        }
-
-        var normalizedHex = hex.StartsWith('#') ? hex : "#" + hex;
-        try
-        {
-            background = ColorTranslator.FromHtml(normalizedHex);
-            foreground = ColorTranslator.FromHtml(ColorMath.GetContrastingTextColor(hex));
-            return true;
-        }
-        catch (Exception ex) when (ex is FormatException or ArgumentException)
-        {
-            // Not a recognized color string (e.g. mid-edit).
-            return false;
         }
     }
 }

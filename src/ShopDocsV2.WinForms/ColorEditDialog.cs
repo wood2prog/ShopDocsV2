@@ -54,10 +54,10 @@ internal static class ColorEditDialog
             errorLabel.Text = error;
             saveButton.Enabled = hex is not null;
 
-            if (!string.IsNullOrEmpty(hex))
+            if (SwatchColors.TryGet(hex, out var background, out var foreground))
             {
-                preview.BackColor = ColorTranslator.FromHtml(hex);
-                preview.ForeColor = ColorTranslator.FromHtml(ColorMath.GetContrastingTextColor(hex));
+                preview.BackColor = background;
+                preview.ForeColor = foreground;
                 preview.Text = ColorMath.ToRgbLabel(hex);
             }
             else

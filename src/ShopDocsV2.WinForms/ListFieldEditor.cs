@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using System.Drawing;
 using ShopDocsV2.Application;
 using ShopDocsV2.Domain;
 
@@ -435,13 +434,11 @@ public partial class ListFieldEditor : UserControl
         var hex = SwatchHexAt(e.RowIndex, sourceFieldId);
         e.Value = ColorMath.ToRgbLabel(hex);
         e.FormattingApplied = true;
-        if (e.Value is "")
+        if (!SwatchColors.TryGet(hex, out var background, out var foreground))
         {
             return;
         }
 
-        var background = ColorTranslator.FromHtml(NormalizeHex(hex!));
-        var foreground = ColorTranslator.FromHtml(ColorMath.GetContrastingTextColor(hex));
         e.CellStyle!.BackColor = background;
         e.CellStyle.ForeColor = foreground;
         // Keep the swatch visible (instead of the selection highlight) when the cell is selected.
@@ -471,29 +468,25 @@ public partial class ListFieldEditor : UserControl
             return;
         }
 
-        var hex = SwatchHexAt(e.RowIndex, sourceFieldId);
-        var rgb = ColorMath.ToRgbLabel(hex);
-        if (rgb == "")
+        if (SwatchHexAt(e.RowIndex, sourceFieldId) is not { } hex)
         {
             return;
         }
 
-        var normalizedHex = NormalizeHex(hex!).ToUpperInvariant();
+        var rgb = ColorMath.ToRgbLabel(hex);
         var menu = new ContextMenuStrip();
         menu.Items.Add($"Copy RGB ({rgb})", null, (_, _) => CopyToClipboard(rgb));
-        menu.Items.Add($"Copy Hex ({normalizedHex})", null, (_, _) => CopyToClipboard(normalizedHex));
+        menu.Items.Add($"Copy Hex ({hex})", null, (_, _) => CopyToClipboard(hex));
         menu.Closed += (_, _) => BeginInvoke(menu.Dispose);
         menu.Show(Cursor.Position);
     }
 
-    /// <summary>The catalog hex for the finish named in this row's source column, or null if none/unknown.</summary>
+    /// <summary>The catalog hex (as "#RRGGBB") for the finish named in this row's source column, or null if none/unknown/invalid.</summary>
     private string? SwatchHexAt(int rowIndex, string sourceFieldId)
     {
         var name = grid.Rows[rowIndex].Cells[sourceFieldId].Value as string;
-        return string.IsNullOrEmpty(name) ? null : _catalog!.HexFor(name);
+        return string.IsNullOrEmpty(name) ? null : ColorMath.ParseHexInput(_catalog!.HexFor(name));
     }
-
-    private static string NormalizeHex(string hex) => hex.StartsWith('#') ? hex : "#" + hex;
 
     private void CopyToClipboard(string text)
     {
