@@ -39,7 +39,6 @@ partial class CountertopColorsGrid
             HeaderText = "Material",
             DisplayStyle = DataGridViewComboBoxDisplayStyle.ComboBox
         };
-        materialColumn.Items.AddRange(CountertopColorsGrid.MaterialOptions);
 
         var colorColumn = new DataGridViewTextBoxColumn { Name = "Color", HeaderText = "Color / Pattern" };
         var removeColumn = new DataGridViewButtonColumn

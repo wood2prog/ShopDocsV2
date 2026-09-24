@@ -7,11 +7,13 @@ public partial class CatalogManagerForm : Form
 {
     private readonly ICatalogRepository _catalogRepository;
     private readonly IPaintColorLookupService _paintColorLookupService;
+    private readonly QuestionSet _questionSet;
 
-    public CatalogManagerForm(ICatalogRepository catalogRepository, IPaintColorLookupService paintColorLookupService)
+    public CatalogManagerForm(ICatalogRepository catalogRepository, IPaintColorLookupService paintColorLookupService, QuestionSet questionSet)
     {
         _catalogRepository = catalogRepository;
         _paintColorLookupService = paintColorLookupService;
+        _questionSet = questionSet;
         InitializeComponent();
 
         Load += async (_, _) => await LoadAllAsync();
@@ -25,6 +27,6 @@ public partial class CatalogManagerForm : Form
         await hingesGrid.BindAsync(_catalogRepository, CatalogList.Hinges);
         await guidesGrid.BindAsync(_catalogRepository, CatalogList.Guides);
         await finishesGrid.BindAsync(_catalogRepository, _paintColorLookupService);
-        await countertopColorsGrid.BindAsync(_catalogRepository);
+        await countertopColorsGrid.BindAsync(_catalogRepository, _questionSet);
     }
 }

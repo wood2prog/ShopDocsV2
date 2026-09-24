@@ -264,7 +264,7 @@ public partial class MainForm : Form
 
     private async void CatalogManagerMenuItem_Click(object? sender, EventArgs e)
     {
-        using var catalogManagerForm = new CatalogManagerForm(_catalogRepository, _paintColorLookupService);
+        using var catalogManagerForm = new CatalogManagerForm(_catalogRepository, _paintColorLookupService, _questionSet);
         catalogManagerForm.ShowDialog(this);
 
         // Catalog edits are committed live by the manager's grids; refresh so open room tabs pick them up.

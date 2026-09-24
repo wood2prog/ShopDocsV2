@@ -1,17 +1,16 @@
 using ShopDocsV2.Application;
+using ShopDocsV2.Domain;
 
 namespace ShopDocsV2.WinForms;
 
-/// <summary>Countertop Colors CRUD grid: one row per (material, color), material picked from the same static list questions.json uses.</summary>
+/// <summary>Countertop Colors CRUD grid: one row per (material, color), material picked from the options questions.json gives the countertop material field.</summary>
 public partial class CountertopColorsGrid : UserControl
 {
-    internal static readonly string[] MaterialOptions =
-        ["Laminate", "Granite", "Quartz", "Butcher Block", "Solid Surface", "Tile", "Other"];
-
     private const int MaterialColumnIndex = 0;
     private const int ColorColumnIndex = 1;
 
     private ICatalogRepository? _catalogRepository;
+    private List<string> _materialOptions = [];
 
     public CountertopColorsGrid()
     {
@@ -21,15 +20,44 @@ public partial class CountertopColorsGrid : UserControl
         addButton.Click += AddButton_Click;
     }
 
-    internal async Task BindAsync(ICatalogRepository catalogRepository)
+    internal async Task BindAsync(ICatalogRepository catalogRepository, QuestionSet questionSet)
     {
         _catalogRepository = catalogRepository;
+        _materialOptions = MaterialOptionsFrom(questionSet);
         await ReloadAsync();
+    }
+
+    /// <summary>
+    /// The options of the field that a "countertops" catalog field is filtered by (countertops.material in the
+    /// shop's questions.json), so this list always matches what the room form offers. Empty if the schema has none.
+    /// </summary>
+    private static List<string> MaterialOptionsFrom(QuestionSet questionSet)
+    {
+        var fieldLists = questionSet.Sections
+            .SelectMany(s => s.Questions)
+            .Select(q => q.ItemFields)
+            .OfType<List<QuestionDef>>();
+
+        foreach (var fields in fieldLists)
+        {
+            if (fields.FirstOrDefault(f => f.CatalogSource == "countertops" && f.CatalogFilterBy is not null) is { } colorField)
+            {
+                return fields.FirstOrDefault(f => f.Id == colorField.CatalogFilterBy)?.Options ?? [];
+            }
+        }
+
+        return [];
     }
 
     private async Task ReloadAsync()
     {
         var colors = await _catalogRepository!.GetCountertopColorsAsync();
+
+        // Also offer materials already saved but no longer in questions.json, so those rows still display.
+        var materialColumn = (DataGridViewComboBoxColumn)grid.Columns[MaterialColumnIndex];
+        materialColumn.Items.Clear();
+        materialColumn.Items.AddRange([.. _materialOptions.Union(colors.Select(c => c.MaterialName))]);
+
         grid.Rows.Clear();
         foreach (var color in colors)
         {
@@ -40,7 +68,8 @@ public partial class CountertopColorsGrid : UserControl
 
     private void AddButton_Click(object? sender, EventArgs e)
     {
-        var rowIndex = grid.Rows.Add(MaterialOptions[0], "");
+        var rowIndex = grid.Rows.Add();
+        grid.Rows[rowIndex].Cells[MaterialColumnIndex].Value = _materialOptions.FirstOrDefault();
         grid.CurrentCell = grid.Rows[rowIndex].Cells[ColorColumnIndex];
         grid.BeginEdit(true);
     }
@@ -53,8 +82,12 @@ public partial class CountertopColorsGrid : UserControl
         }
 
         var row = grid.Rows[e.RowIndex];
-        var material = row.Cells[MaterialColumnIndex].Value as string ?? MaterialOptions[0];
+        var material = row.Cells[MaterialColumnIndex].Value as string;
         var colorName = (row.Cells[ColorColumnIndex].Value as string ?? "").Trim();
+        if (string.IsNullOrEmpty(material))
+        {
+            return;
+        }
 
         if (row.Tag is int id)
         {
