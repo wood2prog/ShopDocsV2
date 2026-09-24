@@ -128,19 +128,9 @@ public sealed class SpecFormattingService : ISpecFormattingService
 
     public string BuildJobText(Job job, QuestionSet questionSet)
     {
-        var headerFields = new (string Label, string? Value)[]
-        {
-            ("Customer", job.CustomerName),
-            ("Phone", job.CustomerPhone),
-            ("Email", job.CustomerEmail),
-            ("Address", job.Address),
-            ("Date Created", job.DateCreated.ToString("yyyy-MM-dd")),
-            ("Due Date", job.DueDate?.ToString("yyyy-MM-dd"))
-        }.Where(f => !string.IsNullOrWhiteSpace(f.Value)).ToList();
-
         var sb = new StringBuilder();
         sb.AppendLine("Job Specification");
-        foreach (var (label, value) in headerFields) sb.AppendLine($"{label}: {value}");
+        foreach (var (label, value) in JobHeader.Fields(job)) sb.AppendLine($"{label}: {value}");
         sb.AppendLine();
 
         var namedRooms = job.Rooms.Where(r => !string.IsNullOrWhiteSpace(r.Name)).OrderBy(r => r.SortOrder).ToList();
