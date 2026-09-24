@@ -41,15 +41,7 @@ partial class CountertopColorsGrid
         };
 
         var colorColumn = new DataGridViewTextBoxColumn { Name = "Color", HeaderText = "Color / Pattern" };
-        var removeColumn = new DataGridViewButtonColumn
-        {
-            Name = "Remove",
-            HeaderText = "",
-            Text = "✕",
-            UseColumnTextForButtonValue = true,
-            Width = 32,
-            AutoSizeMode = DataGridViewAutoSizeColumnMode.None
-        };
+        var removeColumn = CatalogGrid.CreateRemoveColumn();
         grid.Columns.AddRange([materialColumn, colorColumn, removeColumn]);
 
         addButton.Dock = DockStyle.Bottom;

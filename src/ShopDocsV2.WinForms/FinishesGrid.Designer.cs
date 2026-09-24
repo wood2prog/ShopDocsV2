@@ -63,15 +63,7 @@ partial class FinishesGrid
             Width = 60,
             AutoSizeMode = DataGridViewAutoSizeColumnMode.None
         };
-        var removeColumn = new DataGridViewButtonColumn
-        {
-            Name = "Remove",
-            HeaderText = "",
-            Text = "✕",
-            UseColumnTextForButtonValue = true,
-            Width = 32,
-            AutoSizeMode = DataGridViewAutoSizeColumnMode.None
-        };
+        var removeColumn = CatalogGrid.CreateRemoveColumn();
         grid.Columns.AddRange([nameColumn, hexColumn, rgbColumn, lookupColumn, editColorColumn, removeColumn]);
 
         addButton.Dock = DockStyle.Bottom;

@@ -106,7 +106,7 @@ public partial class CountertopColorsGrid : UserControl
 
     private async void Grid_CellContentClick(object? sender, DataGridViewCellEventArgs e)
     {
-        if (e.RowIndex < 0 || e.ColumnIndex < 0 || grid.Columns[e.ColumnIndex].Name != "Remove")
+        if (e.RowIndex < 0 || !CatalogGrid.IsRemoveColumn(grid, e.ColumnIndex))
         {
             return;
         }
@@ -114,9 +114,7 @@ public partial class CountertopColorsGrid : UserControl
         var row = grid.Rows[e.RowIndex];
         if (row.Tag is int id)
         {
-            var colorName = row.Cells[ColorColumnIndex].Value as string ?? "";
-            var confirm = MessageBox.Show(FindForm(), $"Delete \"{colorName}\"?", "Delete", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
-            if (confirm != DialogResult.Yes)
+            if (!CatalogGrid.ConfirmDelete(this, row.Cells[ColorColumnIndex].Value as string ?? ""))
             {
                 return;
             }

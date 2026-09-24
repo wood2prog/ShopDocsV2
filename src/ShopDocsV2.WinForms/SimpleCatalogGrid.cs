@@ -6,8 +6,6 @@ namespace ShopDocsV2.WinForms;
 /// <summary>Reusable add/rename/delete grid for the five catalog kinds that are just an id/name/sort_order table.</summary>
 public partial class SimpleCatalogGrid : UserControl
 {
-    private const string RemoveColumnName = "Remove";
-
     private ICatalogRepository? _catalogRepository;
     private CatalogList _list;
 
@@ -67,19 +65,12 @@ public partial class SimpleCatalogGrid : UserControl
 
     private async void Grid_CellContentClick(object? sender, DataGridViewCellEventArgs e)
     {
-        if (e.RowIndex < 0 || e.ColumnIndex < 0 || grid.Columns[e.ColumnIndex].Name != RemoveColumnName)
+        if (e.RowIndex < 0 || !CatalogGrid.IsRemoveColumn(grid, e.ColumnIndex) || grid.Rows[e.RowIndex].Tag is not int id)
         {
             return;
         }
 
-        if (grid.Rows[e.RowIndex].Tag is not int id)
-        {
-            return;
-        }
-
-        var name = grid.Rows[e.RowIndex].Cells[0].Value as string ?? "";
-        var confirm = MessageBox.Show(FindForm(), $"Delete \"{name}\"?", "Delete", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
-        if (confirm != DialogResult.Yes)
+        if (!CatalogGrid.ConfirmDelete(this, grid.Rows[e.RowIndex].Cells[0].Value as string ?? ""))
         {
             return;
         }

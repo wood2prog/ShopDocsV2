@@ -34,15 +34,7 @@ partial class SimpleCatalogGrid
         grid.EditMode = DataGridViewEditMode.EditOnKeystrokeOrF2;
 
         var nameColumn = new DataGridViewTextBoxColumn { Name = "Name", HeaderText = "Name" };
-        var removeColumn = new DataGridViewButtonColumn
-        {
-            Name = "Remove",
-            HeaderText = "",
-            Text = "✕",
-            UseColumnTextForButtonValue = true,
-            Width = 32,
-            AutoSizeMode = DataGridViewAutoSizeColumnMode.None
-        };
+        var removeColumn = CatalogGrid.CreateRemoveColumn();
         grid.Columns.AddRange([nameColumn, removeColumn]);
 
         addButton.Dock = DockStyle.Bottom;
