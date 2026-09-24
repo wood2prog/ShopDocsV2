@@ -17,6 +17,7 @@ public partial class ListFieldEditor : UserControl
 {
     private const string RemoveColumnName = "__remove";
     private const string SpecsColumnName = "__specs";
+    private const string SinkSearchColumnName = "__sink_search";
     private const string SwatchColumnPrefix = "__swatch_";
 
     private Room? _room;
@@ -144,6 +145,16 @@ public partial class ListFieldEditor : UserControl
                 UseColumnTextForLinkValue = true
             });
         }
+        else if (_question.Id == "sinks")
+        {
+            grid.Columns.Add(new DataGridViewLinkColumn
+            {
+                Name = SinkSearchColumnName,
+                HeaderText = "",
+                Text = "\U0001F50D Search",
+                UseColumnTextForLinkValue = true
+            });
+        }
 
         grid.Columns.Add(new DataGridViewButtonColumn
         {
@@ -261,6 +272,10 @@ public partial class ListFieldEditor : UserControl
         {
             OpenSpecsSearch(item);
         }
+        else if (columnName == SinkSearchColumnName && grid.Rows[e.RowIndex].Tag is RoomListItem sink)
+        {
+            OpenSinkSearch(sink);
+        }
     }
 
     private void RemoveRowAt(int rowIndex)
@@ -282,6 +297,25 @@ public partial class ListFieldEditor : UserControl
         }
 
         var query = $"\"{model}\" (\"quick specs\" OR \"spec sheet\" OR \"specification sheet\")";
+        OpenGoogleSearch(query);
+    }
+
+    private static void OpenSinkSearch(RoomListItem item)
+    {
+        var parts = new[] { "sink_type", "model" }
+            .Select(id => (item.Fields.TryGetValue(id, out var value) ? value.Text : null)?.Trim())
+            .Where(text => !string.IsNullOrEmpty(text));
+        var query = string.Join(" ", parts);
+        if (query.Length == 0)
+        {
+            return;
+        }
+
+        OpenGoogleSearch(query);
+    }
+
+    private static void OpenGoogleSearch(string query)
+    {
         var url = $"https://www.google.com/search?q={Uri.EscapeDataString(query)}";
         Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
     }
