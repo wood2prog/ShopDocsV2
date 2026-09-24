@@ -24,6 +24,7 @@ partial class MainForm
     private ToolStripMenuItem toolsMenuItem = null!;
     private ToolStripMenuItem catalogManagerMenuItem = null!;
     private ToolStripMenuItem reloadQuestionsMenuItem = null!;
+    private ToolStripMenuItem aboutMenuItem = null!;
     private StatusStrip statusStrip = null!;
     private ToolStripStatusLabel statusLabel = null!;
     private JobInfoPanel jobInfoPanel = null!;
@@ -62,6 +63,7 @@ partial class MainForm
         toolsMenuItem = new ToolStripMenuItem();
         catalogManagerMenuItem = new ToolStripMenuItem();
         reloadQuestionsMenuItem = new ToolStripMenuItem();
+        aboutMenuItem = new ToolStripMenuItem();
         statusStrip = new StatusStrip();
         statusLabel = new ToolStripStatusLabel();
         jobInfoPanel = new JobInfoPanel();
@@ -160,8 +162,17 @@ partial class MainForm
         reloadQuestionsMenuItem.Text = "&Reload Questions";
         reloadQuestionsMenuItem.Click += ReloadQuestionsMenuItem_Click;
 
+        // aboutMenuItem: right-aligned info icon. U+E946 is the "Info" glyph in Segoe MDL2 Assets.
+        aboutMenuItem.Text = "";
+        aboutMenuItem.Font = new Font("Segoe MDL2 Assets", 10F);
+        aboutMenuItem.Alignment = ToolStripItemAlignment.Right;
+        aboutMenuItem.ToolTipText = "About Shop Docs";
+        aboutMenuItem.AccessibleName = "About Shop Docs";
+        aboutMenuItem.Click += AboutMenuItem_Click;
+
         // menuStrip
-        menuStrip.Items.AddRange([fileMenuItem, roomMenuItem, exportMenuItem, toolsMenuItem]);
+        menuStrip.Items.AddRange([fileMenuItem, roomMenuItem, exportMenuItem, toolsMenuItem, aboutMenuItem]);
+        menuStrip.ShowItemToolTips = true;
         menuStrip.Dock = DockStyle.Top;
 
         // statusStrip

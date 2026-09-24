@@ -24,7 +24,16 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <ApplicationIcon>AppIcon.ico</ApplicationIcon>
     <!-- Keep in sync with Version in installer/ShopDocsV2.Installer/Package.wxs. -->
-    <Version>1.0.7</Version>
+    <Version>1.0.8</Version>
+    <Product>Shop Docs</Product>
+    <Company>Jesse Ogburn</Company>
+    <!-- Year is taken at compile time, so each build carries the current year. -->
+    <Copyright>© $([System.DateTime]::Now.Year) Jesse Ogburn. All rights reserved.</Copyright>
   </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Compile date shown in the About dialog; read back via AssemblyMetadataAttribute("BuildDate"). -->
+    <AssemblyMetadata Include="BuildDate" Value="$([System.DateTime]::Now.ToString('yyyy-MM-dd'))" />
+  </ItemGroup>
 
 </Project>

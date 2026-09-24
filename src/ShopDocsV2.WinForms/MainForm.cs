@@ -148,6 +148,8 @@ public partial class MainForm : Form
 
     private void ExitMenuItem_Click(object? sender, EventArgs e) => Close();
 
+    private void AboutMenuItem_Click(object? sender, EventArgs e) => AboutDialog.Show(this);
+
     private void AddRoomMenuItem_Click(object? sender, EventArgs e) => roomsTabControl.AddRoom();
 
     private void RenameRoomMenuItem_Click(object? sender, EventArgs e) => roomsTabControl.RenameSelectedRoom();
