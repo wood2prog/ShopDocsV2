@@ -8,13 +8,16 @@ namespace ShopDocsV2.WinForms;
 
 /// <summary>
 /// Renders a List question as an editable grid: one column per itemField, one row per RoomListItem.
-/// Catalog-backed columns get free-typing autocomplete (via EditingControlShowing); plain-select
-/// columns get a real constrained dropdown; a ColorPreview column gets a swatch background.
+/// Catalog-backed columns get a dropdown of catalog options that opens on click but still accepts
+/// free-typed values (options are per row, so CatalogFilterBy works); plain-select columns get a
+/// real constrained dropdown; a ColorPreview column is followed by a read-only swatch
+/// column showing the finish's color with its RGB value on top (click it to copy RGB or hex).
 /// </summary>
 public partial class ListFieldEditor : UserControl
 {
     private const string RemoveColumnName = "__remove";
     private const string SpecsColumnName = "__specs";
+    private const string SwatchColumnPrefix = "__swatch_";
 
     private Room? _room;
     private QuestionDef? _question;
@@ -22,8 +25,8 @@ public partial class ListFieldEditor : UserControl
     private Action? _onAnswerChanged;
     private List<RoomListItem>? _items;
 
-    /// <summary>Autocomplete sources for catalog-backed columns that don't depend on a CatalogFilterBy sibling, built once per Bind() rather than re-resolved every time a cell enters edit mode.</summary>
-    private readonly Dictionary<string, AutoCompleteStringCollection> _unfilteredAutoCompleteCache = new();
+    /// <summary>Options for catalog-backed columns that don't depend on a CatalogFilterBy sibling, resolved once per Bind() rather than once per row.</summary>
+    private readonly Dictionary<string, IReadOnlyList<string>> _unfilteredOptionsCache = new();
 
     public ListFieldEditor()
     {
@@ -34,13 +37,17 @@ public partial class ListFieldEditor : UserControl
         grid.CellValueChanged += Grid_CellValueChanged;
         grid.CurrentCellDirtyStateChanged += (_, _) =>
         {
-            if (grid.IsCurrentCellDirty)
+            // Catalog cells commit on pick (SelectionChangeCommitted) or on leaving the cell, not per
+            // keystroke: a half-typed value isn't in the cell's Items yet and would fail to parse.
+            if (grid.IsCurrentCellDirty && CatalogFieldAt(grid.CurrentCell?.ColumnIndex ?? -1) is null)
             {
                 grid.CommitEdit(DataGridViewDataErrorContexts.Commit);
             }
         };
+        grid.CellValidating += Grid_CellValidating;
         grid.EditingControlShowing += Grid_EditingControlShowing;
         grid.CellFormatting += Grid_CellFormatting;
+        grid.CellClick += Grid_CellClick;
         grid.UserDeletingRow += (_, e) =>
         {
             if (e.Row?.Tag is RoomListItem item)
@@ -67,18 +74,16 @@ public partial class ListFieldEditor : UserControl
         }
         _items = items;
 
-        _unfilteredAutoCompleteCache.Clear();
+        _unfilteredOptionsCache.Clear();
         foreach (var field in question.ItemFields ?? [])
         {
             if (string.IsNullOrEmpty(field.CatalogSource) || field.CatalogFilterBy is not null ||
-                _unfilteredAutoCompleteCache.ContainsKey(field.CatalogSource))
+                _unfilteredOptionsCache.ContainsKey(field.CatalogSource))
             {
                 continue;
             }
 
-            var source = new AutoCompleteStringCollection();
-            source.AddRange([.. catalog.Resolve(field.CatalogSource, null)]);
-            _unfilteredAutoCompleteCache[field.CatalogSource] = source;
+            _unfilteredOptionsCache[field.CatalogSource] = catalog.Resolve(field.CatalogSource, null);
         }
 
         BuildColumns();
@@ -102,11 +107,31 @@ public partial class ListFieldEditor : UserControl
                 }
                 column = comboColumn;
             }
+            else if (!string.IsNullOrEmpty(field.CatalogSource))
+            {
+                // Items are filled per cell by RefreshCatalogOptions, since filtered fields differ by row.
+                column = new DataGridViewComboBoxColumn { Name = field.Id, HeaderText = field.Label };
+            }
             else
             {
                 column = new DataGridViewTextBoxColumn { Name = field.Id, HeaderText = field.Label };
             }
             grid.Columns.Add(column);
+
+            if (field.ColorPreview)
+            {
+                grid.Columns.Add(new DataGridViewTextBoxColumn
+                {
+                    Name = SwatchColumnPrefix + field.Id,
+                    HeaderText = "Swatch",
+                    ReadOnly = true,
+                    Width = 130,
+                    AutoSizeMode = DataGridViewAutoSizeColumnMode.None,
+                    SortMode = DataGridViewColumnSortMode.NotSortable,
+                    DefaultCellStyle = { Alignment = DataGridViewContentAlignment.MiddleCenter },
+                    Tag = field.Id
+                });
+            }
         }
 
         if (_question.Id == "appliance_package")
@@ -148,8 +173,59 @@ public partial class ListFieldEditor : UserControl
 
         foreach (var field in _question!.ItemFields ?? [])
         {
-            row.Cells[field.Id].Value = item.Fields.TryGetValue(field.Id, out var value) ? value.DisplayText : "";
+            var text = item.Fields.TryGetValue(field.Id, out var value) ? value.DisplayText : "";
+            if (!string.IsNullOrEmpty(field.CatalogSource))
+            {
+                RefreshCatalogOptions(row, field, text);
+            }
+            row.Cells[field.Id].Value = text;
         }
+    }
+
+    /// <summary>
+    /// Refills a catalog cell's dropdown from the catalog (narrowed by its sibling when CatalogFilterBy is set).
+    /// The current value stays in the list even when it isn't a catalog entry, so free-typed or
+    /// since-deleted values still display instead of failing the combo cell's value check.
+    /// </summary>
+    private void RefreshCatalogOptions(DataGridViewRow row, QuestionDef field, string currentValue)
+    {
+        IReadOnlyList<string> options;
+        if (field.CatalogFilterBy is null)
+        {
+            options = _unfilteredOptionsCache[field.CatalogSource!];
+        }
+        else
+        {
+            string? filterValue = null;
+            if (row.Tag is RoomListItem item && item.Fields.TryGetValue(field.CatalogFilterBy, out var fv))
+            {
+                filterValue = fv.Text;
+            }
+            options = _catalog!.Resolve(field.CatalogSource, filterValue);
+        }
+
+        var cell = (DataGridViewComboBoxCell)row.Cells[field.Id];
+        cell.Items.Clear();
+        cell.Items.Add("");
+        foreach (var option in options)
+        {
+            cell.Items.Add(option);
+        }
+        if (!string.IsNullOrEmpty(currentValue) && !options.Contains(currentValue))
+        {
+            cell.Items.Add(currentValue);
+        }
+    }
+
+    private QuestionDef? CatalogFieldAt(int columnIndex)
+    {
+        if (columnIndex < 0)
+        {
+            return null;
+        }
+
+        var field = _question!.ItemFields?.FirstOrDefault(f => f.Id == grid.Columns[columnIndex].Name);
+        return string.IsNullOrEmpty(field?.CatalogSource) ? null : field;
     }
 
     private void AddButton_Click(object? sender, EventArgs e)
@@ -227,22 +303,24 @@ public partial class ListFieldEditor : UserControl
         var text = grid.Rows[e.RowIndex].Cells[e.ColumnIndex].Value as string ?? "";
         SetFieldAnswer(item, itemField, text);
 
+        if (itemField.ColorPreview)
+        {
+            grid.InvalidateCell(grid.Columns[SwatchColumnPrefix + itemField.Id]!.Index, e.RowIndex);
+        }
+
         foreach (var dependent in _question.ItemFields!.Where(f => f.CatalogFilterBy == itemField.Id))
         {
-            if (!item.Fields.TryGetValue(dependent.Id, out var depValue))
+            var row = grid.Rows[e.RowIndex];
+            var depText = item.Fields.TryGetValue(dependent.Id, out var depValue) ? depValue.Text ?? "" : "";
+            if (depText != "" && !_catalog!.Resolve(dependent.CatalogSource, text).Contains(depText))
             {
-                continue;
+                item.Fields.Remove(dependent.Id);
+                depText = "";
             }
 
-            var validOptions = _catalog!.Resolve(dependent.CatalogSource, text);
-            if (validOptions.Contains(depValue.Text))
-            {
-                continue;
-            }
-
-            item.Fields.Remove(dependent.Id);
-            var depColumnIndex = grid.Columns[dependent.Id]!.Index;
-            grid.Rows[e.RowIndex].Cells[depColumnIndex].Value = "";
+            // Re-filter the dependent's dropdown to the newly chosen value.
+            RefreshCatalogOptions(row, dependent, depText);
+            row.Cells[dependent.Id].Value = depText;
         }
 
         _onAnswerChanged?.Invoke();
@@ -273,62 +351,150 @@ public partial class ListFieldEditor : UserControl
 
     private void Grid_EditingControlShowing(object? sender, DataGridViewEditingControlShowingEventArgs e)
     {
-        var columnIndex = grid.CurrentCell?.ColumnIndex ?? -1;
-        if (columnIndex < 0 || e.Control is not TextBox textBox)
+        if (e.Control is not ComboBox comboBox)
         {
             return;
         }
 
-        var field = _question!.ItemFields?.FirstOrDefault(f => f.Id == grid.Columns[columnIndex].Name);
-        if (field is null || string.IsNullOrEmpty(field.CatalogSource))
+        // The grid reuses one editing control across cells and columns, so reset what we change here.
+        comboBox.SelectionChangeCommitted -= CatalogComboBox_SelectionChangeCommitted;
+        comboBox.TextUpdate -= CatalogComboBox_TextUpdate;
+
+        if (CatalogFieldAt(grid.CurrentCell?.ColumnIndex ?? -1) is null)
+        {
+            comboBox.DropDownStyle = ComboBoxStyle.DropDownList;
+            comboBox.AutoCompleteMode = AutoCompleteMode.None;
+            return;
+        }
+
+        // DropDown (not DropDownList) so values outside the catalog can still be typed.
+        comboBox.DropDownStyle = ComboBoxStyle.DropDown;
+        comboBox.AutoCompleteMode = AutoCompleteMode.SuggestAppend;
+        comboBox.AutoCompleteSource = AutoCompleteSource.ListItems;
+        comboBox.SelectionChangeCommitted += CatalogComboBox_SelectionChangeCommitted;
+        comboBox.TextUpdate += CatalogComboBox_TextUpdate;
+    }
+
+    // The combo editing control only reports a change on list selection; flag typed text too so a
+    // free-typed value is committed (via Grid_CellValidating) when the user leaves the cell.
+    private void CatalogComboBox_TextUpdate(object? sender, EventArgs e) => grid.NotifyCurrentCellDirty(true);
+
+    private void CatalogComboBox_SelectionChangeCommitted(object? sender, EventArgs e)
+    {
+        // Picked from the list: the value is already in the cell's Items, so commit right away.
+        // In DropDown style, Text still holds the previous value when this event fires, and the grid
+        // commits Text — so sync it to the picked item first or the old value gets committed.
+        if (sender is ComboBox { SelectedItem: string picked } comboBox)
+        {
+            comboBox.Text = picked;
+        }
+        grid.NotifyCurrentCellDirty(true);
+        grid.CommitEdit(DataGridViewDataErrorContexts.Commit);
+    }
+
+    private void Grid_CellValidating(object? sender, DataGridViewCellValidatingEventArgs e)
+    {
+        if (e.RowIndex < 0 || !grid.IsCurrentCellInEditMode || CatalogFieldAt(e.ColumnIndex) is null ||
+            grid.EditingControl is not ComboBox comboBox)
         {
             return;
         }
 
-        textBox.AutoCompleteMode = AutoCompleteMode.SuggestAppend;
-        textBox.AutoCompleteSource = AutoCompleteSource.CustomSource;
-
-        if (field.CatalogFilterBy is null)
+        // Free-typed value: add it to this cell's Items so the combo cell accepts it on commit.
+        var text = comboBox.Text.Trim();
+        var cell = (DataGridViewComboBoxCell)grid.Rows[e.RowIndex].Cells[e.ColumnIndex];
+        if (!cell.Items.Contains(text))
         {
-            // Same options every time (no sibling filter) — reuse the cache built once in Bind().
-            textBox.AutoCompleteCustomSource = _unfilteredAutoCompleteCache[field.CatalogSource];
-            return;
+            cell.Items.Add(text);
         }
 
-        string? filterValue = null;
-        if (grid.CurrentCell?.OwningRow?.Tag is RoomListItem item &&
-            item.Fields.TryGetValue(field.CatalogFilterBy, out var fv))
+        if (!Equals(cell.Value, text))
         {
-            filterValue = fv.Text;
+            comboBox.Text = text;
+            grid.NotifyCurrentCellDirty(true);
         }
-
-        var source = new AutoCompleteStringCollection();
-        source.AddRange([.. _catalog!.Resolve(field.CatalogSource, filterValue)]);
-        textBox.AutoCompleteCustomSource = source;
     }
 
     private void Grid_CellFormatting(object? sender, DataGridViewCellFormattingEventArgs e)
+    {
+        if (e.RowIndex < 0 || e.ColumnIndex < 0 || grid.Columns[e.ColumnIndex].Tag is not string sourceFieldId)
+        {
+            return;
+        }
+
+        var hex = SwatchHexAt(e.RowIndex, sourceFieldId);
+        e.Value = ColorMath.ToRgbLabel(hex);
+        e.FormattingApplied = true;
+        if (e.Value is "")
+        {
+            return;
+        }
+
+        var background = ColorTranslator.FromHtml(NormalizeHex(hex!));
+        var foreground = ColorTranslator.FromHtml(ColorMath.GetContrastingTextColor(hex));
+        e.CellStyle!.BackColor = background;
+        e.CellStyle.ForeColor = foreground;
+        // Keep the swatch visible (instead of the selection highlight) when the cell is selected.
+        e.CellStyle.SelectionBackColor = background;
+        e.CellStyle.SelectionForeColor = foreground;
+    }
+
+    private void Grid_CellClick(object? sender, DataGridViewCellEventArgs e)
     {
         if (e.RowIndex < 0 || e.ColumnIndex < 0)
         {
             return;
         }
 
-        var field = _question!.ItemFields?.FirstOrDefault(f => f.Id == grid.Columns[e.ColumnIndex].Name);
-        if (field is not { ColorPreview: true })
+        if (CatalogFieldAt(e.ColumnIndex) is not null)
+        {
+            // One click opens the option list (the grid otherwise only starts editing on a keystroke or F2).
+            if (grid.BeginEdit(false) && grid.EditingControl is ComboBox comboBox)
+            {
+                comboBox.DroppedDown = true;
+            }
+            return;
+        }
+
+        if (grid.Columns[e.ColumnIndex].Tag is not string sourceFieldId)
         {
             return;
         }
 
-        var text = e.Value as string;
-        var hex = string.IsNullOrEmpty(text) ? null : _catalog!.HexFor(text);
-        if (hex is null)
+        var hex = SwatchHexAt(e.RowIndex, sourceFieldId);
+        var rgb = ColorMath.ToRgbLabel(hex);
+        if (rgb == "")
         {
             return;
         }
 
-        var normalizedHex = hex.StartsWith('#') ? hex : "#" + hex;
-        e.CellStyle!.BackColor = ColorTranslator.FromHtml(normalizedHex);
-        e.CellStyle.ForeColor = ColorTranslator.FromHtml(ColorMath.GetContrastingTextColor(hex));
+        var normalizedHex = NormalizeHex(hex!).ToUpperInvariant();
+        var menu = new ContextMenuStrip();
+        menu.Items.Add($"Copy RGB ({rgb})", null, (_, _) => CopyToClipboard(rgb));
+        menu.Items.Add($"Copy Hex ({normalizedHex})", null, (_, _) => CopyToClipboard(normalizedHex));
+        menu.Closed += (_, _) => BeginInvoke(menu.Dispose);
+        menu.Show(Cursor.Position);
+    }
+
+    /// <summary>The catalog hex for the finish named in this row's source column, or null if none/unknown.</summary>
+    private string? SwatchHexAt(int rowIndex, string sourceFieldId)
+    {
+        var name = grid.Rows[rowIndex].Cells[sourceFieldId].Value as string;
+        return string.IsNullOrEmpty(name) ? null : _catalog!.HexFor(name);
+    }
+
+    private static string NormalizeHex(string hex) => hex.StartsWith('#') ? hex : "#" + hex;
+
+    private void CopyToClipboard(string text)
+    {
+        try
+        {
+            Clipboard.SetText(text);
+        }
+        catch (System.Runtime.InteropServices.ExternalException)
+        {
+            MessageBox.Show(FindForm(), "The clipboard is in use by another program. Please try again.",
+                "Copy", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
     }
 }
