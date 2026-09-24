@@ -37,10 +37,11 @@ internal static class ColorEditDialog
             TextAlign = ContentAlignment.MiddleCenter
         };
         var errorLabel = new Label { AutoSize = true, Location = new Point(12, 126), ForeColor = Color.Firebrick };
+        var pickButton = new Button { Text = "Pick from Screen", Location = new Point(12, 152), Width = 120 };
         var saveButton = new Button { Text = "Save", DialogResult = DialogResult.OK, Location = new Point(152, 152), Width = 75 };
         var cancelButton = new Button { Text = "Cancel", DialogResult = DialogResult.Cancel, Location = new Point(233, 152), Width = 75 };
 
-        form.Controls.AddRange([hexLabel, hexTextBox, rgbLabel, rgbTextBox, preview, errorLabel, saveButton, cancelButton]);
+        form.Controls.AddRange([hexLabel, hexTextBox, rgbLabel, rgbTextBox, preview, errorLabel, pickButton, saveButton, cancelButton]);
         form.AcceptButton = saveButton;
         form.CancelButton = cancelButton;
 
@@ -101,6 +102,23 @@ internal static class ColorEditDialog
             hex => ColorMath.ToRgbLabel(hex).Replace("RGB ", ""), "Hex must be 3 or 6 digits, e.g. #EDEAE0.");
         rgbTextBox.TextChanged += (_, _) => OnFieldChanged(rgbTextBox, hexTextBox, s => ColorMath.ParseRgbInput(s),
             hex => hex, "RGB must be three numbers 0-255, e.g. 237, 234, 224.");
+
+        pickButton.Click += async (_, _) =>
+        {
+            // Hide this dialog (Opacity, since hiding a modal form would close it) so it isn't in the
+            // screenshot, and give the desktop a moment to repaint underneath before capturing.
+            form.Opacity = 0;
+            await Task.Delay(200);
+            var picked = ScreenColorPicker.PickColor();
+            form.Opacity = 1;
+            form.Activate();
+
+            if (picked is { } color)
+            {
+                // Filling the hex field syncs the RGB field and preview via its TextChanged handler.
+                hexTextBox.Text = $"#{color.R:X2}{color.G:X2}{color.B:X2}";
+            }
+        };
 
         // Seeding the hex field fills in the RGB field and preview via the handler above.
         hexTextBox.Text = ColorMath.ParseHexInput(currentHex) ?? "";
