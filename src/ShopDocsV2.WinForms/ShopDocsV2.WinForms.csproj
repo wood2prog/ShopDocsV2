@@ -23,6 +23,8 @@
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
     <ApplicationIcon>AppIcon.ico</ApplicationIcon>
+    <!-- Keep in sync with Version in installer/ShopDocsV2.Installer/Package.wxs. -->
+    <Version>1.0.2</Version>
   </PropertyGroup>
 
 </Project>
