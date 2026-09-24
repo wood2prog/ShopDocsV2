@@ -30,6 +30,39 @@ public static partial class ColorMath
         return $"RGB {r}, {g}, {b}";
     }
 
+    [GeneratedRegex(@"^#?([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$")]
+    private static partial Regex HexInputPattern();
+
+    [GeneratedRegex(@"^(?:rgb)?\s*\(?\s*(\d{1,3})\s*[,\s]\s*(\d{1,3})\s*[,\s]\s*(\d{1,3})\s*\)?$", RegexOptions.IgnoreCase)]
+    private static partial Regex RgbInputPattern();
+
+    /// <summary>Parses user-typed hex ("#EDEAE0", "edeae0", "#EEE") into "#RRGGBB", or null if invalid.</summary>
+    public static string? ParseHexInput(string? input)
+    {
+        var m = HexInputPattern().Match(input?.Trim() ?? "");
+        if (!m.Success) return null;
+        var digits = m.Groups[1].Value;
+        if (digits.Length == 3)
+        {
+            digits = string.Concat(digits.Select(c => $"{c}{c}"));
+        }
+        return "#" + digits.ToUpperInvariant();
+    }
+
+    /// <summary>Parses user-typed RGB ("237, 234, 224", "RGB 237, 234, 224", "rgb(237 234 224)") into "#RRGGBB", or null if invalid.</summary>
+    public static string? ParseRgbInput(string? input)
+    {
+        var m = RgbInputPattern().Match(input?.Trim() ?? "");
+        if (!m.Success) return null;
+        var parts = new int[3];
+        for (var i = 0; i < 3; i++)
+        {
+            parts[i] = int.Parse(m.Groups[i + 1].Value);
+            if (parts[i] > 255) return null;
+        }
+        return $"#{parts[0]:X2}{parts[1]:X2}{parts[2]:X2}";
+    }
+
     private static bool TryParseRgb(string? hex, out int r, out int g, out int b)
     {
         r = g = b = 0;

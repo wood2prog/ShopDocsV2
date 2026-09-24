@@ -54,6 +54,15 @@ partial class FinishesGrid
             Width = 100,
             AutoSizeMode = DataGridViewAutoSizeColumnMode.None
         };
+        var editColorColumn = new DataGridViewButtonColumn
+        {
+            Name = "EditColor",
+            HeaderText = "",
+            Text = "Edit",
+            UseColumnTextForButtonValue = true,
+            Width = 60,
+            AutoSizeMode = DataGridViewAutoSizeColumnMode.None
+        };
         var removeColumn = new DataGridViewButtonColumn
         {
             Name = "Remove",
@@ -63,7 +72,7 @@ partial class FinishesGrid
             Width = 32,
             AutoSizeMode = DataGridViewAutoSizeColumnMode.None
         };
-        grid.Columns.AddRange([nameColumn, hexColumn, rgbColumn, lookupColumn, removeColumn]);
+        grid.Columns.AddRange([nameColumn, hexColumn, rgbColumn, lookupColumn, editColorColumn, removeColumn]);
 
         addButton.Dock = DockStyle.Bottom;
         addButton.Text = "+ Add";

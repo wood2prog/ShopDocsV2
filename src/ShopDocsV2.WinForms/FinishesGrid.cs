@@ -3,7 +3,7 @@ using ShopDocsV2.Application;
 
 namespace ShopDocsV2.WinForms;
 
-/// <summary>Finishes CRUD grid: manual hex entry always available, plus a per-row "Lookup Hex" button calling the paint-color API.</summary>
+/// <summary>Finishes CRUD grid: manual hex entry always available (inline, or via the per-row "Edit" color dialog accepting hex or RGB), plus a per-row "Lookup Hex" button calling the paint-color API.</summary>
 public partial class FinishesGrid : UserControl
 {
     private const int NameColumnIndex = 0;
@@ -102,6 +102,26 @@ public partial class FinishesGrid : UserControl
 
             await _catalogRepository!.DeleteFinishAsync(id);
             await ReloadAsync();
+            return;
+        }
+
+        if (columnName == "EditColor")
+        {
+            if (row.Tag is not int id3)
+            {
+                return;
+            }
+
+            var name = row.Cells[NameColumnIndex].Value as string ?? "";
+            var newHex = ColorEditDialog.Show(FindForm(), name, row.Cells[HexColumnIndex].Value as string);
+            if (newHex is null)
+            {
+                return;
+            }
+
+            // A later "Lookup Hex" click simply overwrites this manual value.
+            row.Cells[HexColumnIndex].Value = newHex;
+            await CommitRowAsync(row, id3);
             return;
         }
 
