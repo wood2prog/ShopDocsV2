@@ -1,17 +1,17 @@
 using System.Drawing;
 using System.Text.Json;
-using ShopDocsV2.Infrastructure.Sqlite;
+using ShopDocsV2.Infrastructure.Files;
 
 namespace ShopDocsV2.WinForms;
 
 /// <summary>
-/// Remembers a form's position, size, and maximized state across runs in window.json next to the
-/// SQLite database. Kept out of settings.json because QuestionSetFileProvider rewrites that file whole.
+/// Remembers a form's position, size, and maximized state across runs in window.json in the data
+/// folder next to the SQLite database. Kept out of settings.json because QuestionSetFileProvider
+/// rewrites that file whole.
 /// </summary>
 internal static class WindowPlacementStore
 {
-    private static readonly string FilePath = Path.Combine(
-        Path.GetDirectoryName(SqliteConnectionFactory.GetDefaultDbPath())!, "window.json");
+    private static readonly string FilePath = Path.Combine(AppDataPaths.DataDirectory, "window.json");
 
     /// <summary>Applies the saved placement, if any and still on a connected screen. Call before the form is shown.</summary>
     public static void Restore(Form form)

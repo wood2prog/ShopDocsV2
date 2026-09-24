@@ -1,4 +1,5 @@
 using Microsoft.Data.Sqlite;
+using ShopDocsV2.Infrastructure.Files;
 
 namespace ShopDocsV2.Infrastructure.Sqlite;
 
@@ -11,12 +12,7 @@ public sealed class SqliteConnectionFactory
         _dbPath = dbPath ?? GetDefaultDbPath();
     }
 
-    public static string GetDefaultDbPath()
-    {
-        var dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "ShopDocsV2");
-        Directory.CreateDirectory(dir);
-        return Path.Combine(dir, "shopdocs.db");
-    }
+    public static string GetDefaultDbPath() => Path.Combine(AppDataPaths.DataDirectory, "shopdocs.db");
 
     public SqliteConnection Create()
     {

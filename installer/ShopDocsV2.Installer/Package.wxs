@@ -11,7 +11,7 @@
   -->
   <Package Name="ShopDocsV2"
            Manufacturer="ShopDocsV2"
-           Version="1.0.10"
+           Version="1.0.11"
            UpgradeCode="60e15a1c-79fe-4b49-9d75-311903155792"
            Scope="perUser">
 
