@@ -24,11 +24,11 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <ApplicationIcon>AppIcon.ico</ApplicationIcon>
     <!-- Keep in sync with Version in installer/ShopDocsV2.Installer/Package.wxs. -->
-    <Version>1.0.13</Version>
+    <Version>1.0.14</Version>
     <Product>Shop Docs</Product>
     <Company>Jesse Ogburn</Company>
     <!-- Year is taken at compile time, so each build carries the current year. -->
-    <Copyright>© $([System.DateTime]::Now.Year) Jesse Ogburn. All rights reserved.</Copyright>
+    <Copyright>© $([System.DateTime]::Now.Year) Jesse Ogburn. Licensed under the MIT License.</Copyright>
   </PropertyGroup>
 
   <ItemGroup>

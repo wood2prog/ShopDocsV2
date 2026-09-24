@@ -41,3 +41,7 @@ Building the MSI requires the [WiX Toolset](https://wixtoolset.org/) v6 CLI (`do
 | `ShopDocsV2.WinForms` | The WinForms UI shell |
 
 See [CLAUDE.md](CLAUDE.md) for a deeper architecture walkthrough.
+
+## License
+
+Released under the [MIT License](LICENSE).
