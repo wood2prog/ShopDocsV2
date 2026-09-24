@@ -1,6 +1,5 @@
 using System.Diagnostics;
 using System.Drawing;
-using System.Globalization;
 using ShopDocsV2.Application;
 using ShopDocsV2.Domain;
 
@@ -184,7 +183,7 @@ public partial class ListFieldEditor : UserControl
 
         foreach (var field in _question!.ItemFields ?? [])
         {
-            var text = item.Fields.TryGetValue(field.Id, out var value) ? value.DisplayText : "";
+            var text = AnswerInput.GetText(item.Fields, field.Id) ?? "";
             if (!string.IsNullOrEmpty(field.CatalogSource))
             {
                 RefreshCatalogOptions(row, field, text);
@@ -335,7 +334,7 @@ public partial class ListFieldEditor : UserControl
         }
 
         var text = grid.Rows[e.RowIndex].Cells[e.ColumnIndex].Value as string ?? "";
-        SetFieldAnswer(item, itemField, text);
+        AnswerInput.Set(item.Fields, itemField.Id, text, itemField.Type == QuestionType.Number);
 
         if (itemField.ColorPreview)
         {
@@ -358,29 +357,6 @@ public partial class ListFieldEditor : UserControl
         }
 
         _onAnswerChanged?.Invoke();
-    }
-
-    private static void SetFieldAnswer(RoomListItem item, QuestionDef field, string text)
-    {
-        if (field.Type == QuestionType.Number)
-        {
-            if (double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out var number))
-            {
-                item.Fields[field.Id] = AnswerValue.Of(number);
-            }
-            else
-            {
-                item.Fields.Remove(field.Id);
-            }
-        }
-        else if (string.IsNullOrEmpty(text))
-        {
-            item.Fields.Remove(field.Id);
-        }
-        else
-        {
-            item.Fields[field.Id] = AnswerValue.Of(text);
-        }
     }
 
     private void Grid_EditingControlShowing(object? sender, DataGridViewEditingControlShowingEventArgs e)

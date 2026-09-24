@@ -1,4 +1,3 @@
-using System.Globalization;
 using ShopDocsV2.Domain;
 
 namespace ShopDocsV2.WinForms;
@@ -166,7 +165,7 @@ internal sealed class RoomFormBuilder
     {
         var textBox = new TextBox
         {
-            Text = GetAnswerText(room, question.Id) ?? "",
+            Text = AnswerInput.GetText(room.Answers, question.Id) ?? "",
             PlaceholderText = question.Placeholder ?? "",
             Multiline = true,
             Height = 60,
@@ -174,7 +173,7 @@ internal sealed class RoomFormBuilder
         };
         textBox.TextChanged += (_, _) =>
         {
-            SetTextAnswer(room, question.Id, textBox.Text);
+            AnswerInput.Set(room.Answers, question.Id, textBox.Text, isNumber: false);
             onAnswerChanged();
         };
         return textBox;
@@ -184,7 +183,7 @@ internal sealed class RoomFormBuilder
     {
         var textBox = new TextBox
         {
-            Text = GetAnswerText(room, question.Id) ?? "",
+            Text = AnswerInput.GetText(room.Answers, question.Id) ?? "",
             PlaceholderText = question.Placeholder ?? ""
         };
 
@@ -210,21 +209,7 @@ internal sealed class RoomFormBuilder
 
         textBox.TextChanged += (_, _) =>
         {
-            if (numericOnly)
-            {
-                if (double.TryParse(textBox.Text, NumberStyles.Float, CultureInfo.InvariantCulture, out var number))
-                {
-                    room.Answers[question.Id] = AnswerValue.Of(number);
-                }
-                else
-                {
-                    room.Answers.Remove(question.Id);
-                }
-            }
-            else
-            {
-                SetTextAnswer(room, question.Id, textBox.Text);
-            }
+            AnswerInput.Set(room.Answers, question.Id, textBox.Text, numericOnly);
             onAnswerChanged();
         };
 
@@ -240,7 +225,7 @@ internal sealed class RoomFormBuilder
             comboBox.Items.Add(option);
         }
 
-        var existing = GetAnswerText(room, question.Id);
+        var existing = AnswerInput.GetText(room.Answers, question.Id);
         if (existing is not null)
         {
             comboBox.SelectedItem = existing;
@@ -276,30 +261,15 @@ internal sealed class RoomFormBuilder
     private static CatalogAutocompleteComboBox BuildCatalogSelect(Room room, QuestionDef question, CatalogSnapshot catalog, Action onAnswerChanged)
     {
         var comboBox = new CatalogAutocompleteComboBox();
-        var existing = GetAnswerText(room, question.Id);
+        var existing = AnswerInput.GetText(room.Answers, question.Id);
         comboBox.RefreshOptions(catalog.Resolve(question.CatalogSource, null), existing);
 
         comboBox.TextChanged += (_, _) =>
         {
-            SetTextAnswer(room, question.Id, comboBox.Text);
+            AnswerInput.Set(room.Answers, question.Id, comboBox.Text, isNumber: false);
             onAnswerChanged();
         };
 
         return comboBox;
     }
-
-    private static void SetTextAnswer(Room room, string questionId, string text)
-    {
-        if (string.IsNullOrEmpty(text))
-        {
-            room.Answers.Remove(questionId);
-        }
-        else
-        {
-            room.Answers[questionId] = AnswerValue.Of(text);
-        }
-    }
-
-    private static string? GetAnswerText(Room room, string questionId) =>
-        room.Answers.TryGetValue(questionId, out var value) ? value.DisplayText : null;
 }
