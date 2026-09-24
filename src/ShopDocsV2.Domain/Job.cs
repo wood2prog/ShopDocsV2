@@ -12,6 +12,9 @@ public sealed class Job
     public DateTime UpdatedAt { get; set; }
     public List<Room> Rooms { get; set; } = new();
 
+    /// <summary>Rooms that have a name, in tab order. Unnamed rooms are left out of print and text export.</summary>
+    public IEnumerable<Room> NamedRooms => Rooms.Where(r => !string.IsNullOrWhiteSpace(r.Name)).OrderBy(r => r.SortOrder);
+
     /// <summary>
     /// Whether the user has entered anything worth saving: any customer field, a due date, or any room.
     /// DateCreated doesn't count since every new job gets one automatically.

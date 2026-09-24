@@ -56,4 +56,15 @@ public class JobTests
         job.Rooms.Add(new Room { Id = Guid.NewGuid(), Name = "Kitchen" });
         Assert.True(job.HasContent);
     }
+
+    [Fact]
+    public void NamedRooms_SkipsBlankNamesAndOrdersBySortOrder()
+    {
+        var job = NewBlankJob();
+        job.Rooms.Add(new Room { Id = Guid.NewGuid(), Name = "Pantry", SortOrder = 2 });
+        job.Rooms.Add(new Room { Id = Guid.NewGuid(), Name = "  ", SortOrder = 0 });
+        job.Rooms.Add(new Room { Id = Guid.NewGuid(), Name = "Kitchen", SortOrder = 1 });
+
+        Assert.Equal(new[] { "Kitchen", "Pantry" }, job.NamedRooms.Select(r => r.Name));
+    }
 }

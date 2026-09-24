@@ -133,8 +133,7 @@ public sealed class SpecFormattingService : ISpecFormattingService
         foreach (var (label, value) in JobHeader.Fields(job)) sb.AppendLine($"{label}: {value}");
         sb.AppendLine();
 
-        var namedRooms = job.Rooms.Where(r => !string.IsNullOrWhiteSpace(r.Name)).OrderBy(r => r.SortOrder).ToList();
-        foreach (var room in namedRooms)
+        foreach (var room in job.NamedRooms)
         {
             sb.Append(BuildRoomText(room, questionSet));
             sb.AppendLine();

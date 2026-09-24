@@ -13,9 +13,7 @@ public sealed class JobPrintContentBuilder : IJobPrintContentBuilder
 
     public PrintableJobSpec Build(Job job, QuestionSet questionSet)
     {
-        var rooms = job.Rooms
-            .Where(r => !string.IsNullOrWhiteSpace(r.Name))
-            .OrderBy(r => r.SortOrder)
+        var rooms = job.NamedRooms
             .Select(r => (r.Name, _specFormatting.GetRoomSpecSections(r, questionSet)))
             .ToList();
 
