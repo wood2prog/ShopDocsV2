@@ -15,6 +15,8 @@ public partial class MainForm : Form
     private readonly IOrdxExportService _ordxExportService;
     private readonly System.Windows.Forms.Timer _saveDebounceTimer;
     private Job? _currentJob;
+    /// <summary>False for a New Job that hasn't been written yet; it's inserted on the first save that finds content in it.</summary>
+    private bool _currentJobIsPersisted;
     private QuestionSet _questionSet = new();
     private bool _closingAfterFlush;
 
@@ -88,10 +90,11 @@ public partial class MainForm : Form
     {
         await FlushPendingSaveAsync();
 
+        // Not written to the database yet: SaveCurrentJobAsync inserts it once something is entered,
+        // so opening New Job and walking away doesn't leave an empty job in the list.
         var job = new Job { Id = Guid.NewGuid(), DateCreated = DateTime.Today, UpdatedAt = DateTime.Now };
-        await _jobRepository.CreateJobAsync(job);
-        SetCurrentJob(job);
-        SetStatus("Created new job");
+        SetCurrentJob(job, isPersisted: false);
+        SetStatus("New job (saved once you enter information)");
     }
 
     private async void OpenJobMenuItem_Click(object? sender, EventArgs e)
@@ -124,6 +127,11 @@ public partial class MainForm : Form
         }
 
         await SaveCurrentJobAsync();
+        if (!_currentJobIsPersisted)
+        {
+            SetStatus("Nothing to duplicate yet - enter some information first");
+            return;
+        }
 
         var newId = await _jobRepository.DuplicateJobAsync(_currentJob.Id);
         var duplicate = await _jobRepository.GetJobAsync(newId);
@@ -298,10 +306,11 @@ public partial class MainForm : Form
         }
     }
 
-    private void SetCurrentJob(Job? job)
+    private void SetCurrentJob(Job? job, bool isPersisted = true)
     {
         _saveDebounceTimer.Stop();
         _currentJob = job;
+        _currentJobIsPersisted = isPersisted;
 
         jobInfoPanel.LoadJob(job);
         roomsTabControl.LoadRooms(job?.Rooms);
@@ -351,6 +360,30 @@ public partial class MainForm : Form
         _saveDebounceTimer.Stop();
         if (_currentJob is null)
         {
+            return;
+        }
+
+        if (!_currentJobIsPersisted)
+        {
+            if (!_currentJob.HasContent)
+            {
+                SetStatus("New job (saved once you enter information)");
+                return;
+            }
+
+            SetStatus("Saving...");
+            // Flag first so an overlapping save (e.g. Ctrl+S during this await) updates instead of inserting twice.
+            _currentJobIsPersisted = true;
+            try
+            {
+                await _jobRepository.CreateJobAsync(_currentJob);
+            }
+            catch
+            {
+                _currentJobIsPersisted = false;
+                throw;
+            }
+            SetStatus($"Saved {DateTime.Now:t}");
             return;
         }
 
