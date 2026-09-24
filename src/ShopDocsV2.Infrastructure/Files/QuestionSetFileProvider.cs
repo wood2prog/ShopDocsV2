@@ -86,7 +86,9 @@ public sealed class QuestionSetFileProvider(string? settingsFilePath = null) : I
         ColorPreview = dto.ColorPreview,
         Placeholder = dto.Placeholder,
         AddLabel = dto.AddLabel,
-        ItemFields = dto.ItemFields?.Select(MapQuestion).ToList()
+        ItemFields = dto.ItemFields?.Select(MapQuestion).ToList(),
+        PrintGroup = dto.PrintGroup,
+        PrintSuffix = dto.PrintSuffix
     };
 
     /// <summary>Unknown or absent type strings fall back to Text, mirroring the original app.js's implicit default.</summary>
@@ -130,6 +132,8 @@ public sealed class QuestionSetFileProvider(string? settingsFilePath = null) : I
         public string? Placeholder { get; set; }
         public string? AddLabel { get; set; }
         public List<QuestionDefDto>? ItemFields { get; set; }
+        public string? PrintGroup { get; set; }
+        public string? PrintSuffix { get; set; }
     }
 
     private sealed class ShowIfDto

@@ -35,7 +35,7 @@ public class QuestionSetFileProviderTests : IDisposable
                     { "id": "no_type_field", "label": "No Type" },
                     { "id": "cabinet_finishes", "label": "Cabinet Finishes", "type": "list", "addLabel": "+ Add",
                       "itemFields": [
-                        { "id": "wood", "label": "Wood", "type": "select", "catalogSource": "materials" }
+                        { "id": "wood", "label": "Wood", "type": "select", "catalogSource": "materials", "printGroup": "Cutout", "printSuffix": "W" }
                       ]
                     }
                   ]
@@ -64,6 +64,8 @@ public class QuestionSetFileProviderTests : IDisposable
         Assert.Equal("+ Add", listQuestion.AddLabel);
         var itemField = Assert.Single(listQuestion.ItemFields!);
         Assert.Equal("materials", itemField.CatalogSource);
+        Assert.Equal("Cutout", itemField.PrintGroup);
+        Assert.Equal("W", itemField.PrintSuffix);
     }
 
     [Fact]

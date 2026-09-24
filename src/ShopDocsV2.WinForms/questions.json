@@ -97,7 +97,10 @@
           "addLabel": "+ Add Appliance",
           "itemFields": [
             { "id": "name", "label": "Appliance", "placeholder": "e.g. Range, Dishwasher" },
-            { "id": "model", "label": "Model Number", "placeholder": "Model #" }
+            { "id": "model", "label": "Model Number", "placeholder": "Model #" },
+            { "id": "cutout_width", "label": "Cutout W", "placeholder": "Width", "printGroup": "Cutout", "printSuffix": "W" },
+            { "id": "cutout_height", "label": "Cutout H", "placeholder": "Height", "printGroup": "Cutout", "printSuffix": "H" },
+            { "id": "cutout_depth", "label": "Cutout D", "placeholder": "Depth", "printGroup": "Cutout", "printSuffix": "D" }
           ]
         }
       ]

@@ -60,6 +60,33 @@ public class SpecFormattingServiceTests
     }
 
     [Fact]
+    public void GetRoomSpecSections_CombinesPrintGroupFields_AndSkipsBlankOnes()
+    {
+        var room = new Room
+        {
+            ListAnswers =
+            {
+                ["appliance_package"] = new List<RoomListItem>
+                {
+                    TestFixtures.ListItem(0, ("name", "Range"), ("model", "RF-30"),
+                        ("cutout_width", "30"), ("cutout_height", "36"), ("cutout_depth", "24")),
+                    TestFixtures.ListItem(1, ("name", "Dishwasher"), ("cutout_width", "24"), ("cutout_depth", "24")),
+                    TestFixtures.ListItem(2, ("name", "Microwave"))
+                }
+            }
+        };
+
+        var line = Assert.Single(_sut.GetRoomSpecSections(room, _questions).Single(s => s.Title == "Appliances").Lines);
+
+        Assert.Equal(new[]
+        {
+            "Range — RF-30 — Cutout - 30W x 36H x 24D",
+            "Dishwasher — Cutout - 24W x 24D",
+            "Microwave"
+        }, line.ListLines);
+    }
+
+    [Fact]
     public void BuildRoomText_OmitsRedundantLabelLine_AndSkipsUnansweredSections()
     {
         var room = new Room

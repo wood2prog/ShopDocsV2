@@ -36,6 +36,15 @@ public sealed class QuestionDef
 
     /// <summary>Only used when Type == List.</summary>
     public List<QuestionDef>? ItemFields { get; set; }
+
+    /// <summary>
+    /// Only used on a List's ItemFields: in print/text output, adjacent fields sharing a PrintGroup are
+    /// combined into one part, e.g. "Cutout - 30W x 36H x 24D", skipping blank ones.
+    /// </summary>
+    public string? PrintGroup { get; set; }
+
+    /// <summary>Appended to this field's value inside its PrintGroup, e.g. "W" in "30W".</summary>
+    public string? PrintSuffix { get; set; }
 }
 
 public sealed class ShowIfCondition

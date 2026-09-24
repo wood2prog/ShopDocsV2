@@ -9,6 +9,8 @@ internal static class TestFixtures
     {
         QuestionDef Field(string id, string label, QuestionType type = QuestionType.Text) =>
             new() { Id = id, Label = label, Type = type };
+        QuestionDef CutoutField(string id, string suffix) =>
+            new() { Id = id, Label = "Cutout " + suffix, PrintGroup = "Cutout", PrintSuffix = suffix };
 
         return new QuestionSet
         {
@@ -66,7 +68,11 @@ internal static class TestFixtures
                         new()
                         {
                             Id = "appliance_package", Label = "Appliances", Type = QuestionType.List, AddLabel = "+ Add Appliance",
-                            ItemFields = new List<QuestionDef> { Field("name", "Appliance"), Field("model", "Model Number") }
+                            ItemFields = new List<QuestionDef>
+                            {
+                                Field("name", "Appliance"), Field("model", "Model Number"),
+                                CutoutField("cutout_width", "W"), CutoutField("cutout_height", "H"), CutoutField("cutout_depth", "D")
+                            }
                         }
                     }
                 },

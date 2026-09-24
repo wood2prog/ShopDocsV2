@@ -45,9 +45,7 @@ public sealed class SpecFormattingService : ISpecFormattingService
                     var items = room.ListAnswers.TryGetValue(q.Id, out var list) ? list : new List<RoomListItem>();
                     var listLines = items
                         .OrderBy(i => i.SortOrder)
-                        .Select(item => string.Join(" — ", itemFields
-                            .Select(f => item.Fields.TryGetValue(f.Id, out var v) && !v.IsBlank ? v.DisplayText : null)
-                            .Where(s => s is not null)))
+                        .Select(item => FormatListItem(item, itemFields))
                         .Where(line => line != "")
                         .ToList();
                     lines.Add(new RoomSpecLine(IsList: true, q.Label, showLabel, Value: null, ListLines: listLines));
@@ -65,6 +63,37 @@ public sealed class SpecFormattingService : ISpecFormattingService
         }
 
         return sections;
+    }
+
+    /// <summary>
+    /// Joins an item's non-blank fields with " — ". Adjacent fields sharing a PrintGroup collapse into one
+    /// part, e.g. "Cutout - 30W x 36H x 24D", keeping only the ones filled in.
+    /// </summary>
+    private static string FormatListItem(RoomListItem item, List<QuestionDef> itemFields)
+    {
+        string? ValueOf(QuestionDef f) => item.Fields.TryGetValue(f.Id, out var v) && !v.IsBlank ? v.DisplayText : null;
+
+        var parts = new List<string>();
+        for (var i = 0; i < itemFields.Count; i++)
+        {
+            var group = itemFields[i].PrintGroup;
+            if (string.IsNullOrEmpty(group))
+            {
+                if (ValueOf(itemFields[i]) is { } value) parts.Add(value);
+                continue;
+            }
+
+            var groupValues = new List<string>();
+            for (; i < itemFields.Count && itemFields[i].PrintGroup == group; i++)
+            {
+                if (ValueOf(itemFields[i]) is { } value) groupValues.Add(value + itemFields[i].PrintSuffix);
+            }
+            i--;
+
+            if (groupValues.Count > 0) parts.Add($"{group} - {string.Join(" x ", groupValues)}");
+        }
+
+        return string.Join(" — ", parts);
     }
 
     public string BuildRoomText(Room room, QuestionSet questionSet)
