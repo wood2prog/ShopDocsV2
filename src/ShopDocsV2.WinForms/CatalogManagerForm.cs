@@ -1,4 +1,5 @@
 using ShopDocsV2.Application;
+using ShopDocsV2.Domain;
 
 namespace ShopDocsV2.WinForms;
 
@@ -18,29 +19,12 @@ public partial class CatalogManagerForm : Form
 
     private async Task LoadAllAsync()
     {
-        var repo = _catalogRepository;
-
-        await materialsGrid.BindAsync(
-            async ct => (await repo.GetMaterialsAsync(ct)).Select(m => (m.Id, m.Name)).ToList(),
-            repo.AddMaterialAsync, repo.UpdateMaterialAsync, repo.DeleteMaterialAsync);
-
-        await pullsGrid.BindAsync(
-            async ct => (await repo.GetPullsAsync(ct)).Select(p => (p.Id, p.Name)).ToList(),
-            repo.AddPullAsync, repo.UpdatePullAsync, repo.DeletePullAsync);
-
-        await hardwareColorsGrid.BindAsync(
-            async ct => (await repo.GetHardwareColorsAsync(ct)).Select(h => (h.Id, h.Name)).ToList(),
-            repo.AddHardwareColorAsync, repo.UpdateHardwareColorAsync, repo.DeleteHardwareColorAsync);
-
-        await hingesGrid.BindAsync(
-            async ct => (await repo.GetHingesAsync(ct)).Select(h => (h.Id, h.Name)).ToList(),
-            repo.AddHingeAsync, repo.UpdateHingeAsync, repo.DeleteHingeAsync);
-
-        await guidesGrid.BindAsync(
-            async ct => (await repo.GetGuidesAsync(ct)).Select(g => (g.Id, g.Name)).ToList(),
-            repo.AddGuideAsync, repo.UpdateGuideAsync, repo.DeleteGuideAsync);
-
-        await finishesGrid.BindAsync(repo, _paintColorLookupService);
-        await countertopColorsGrid.BindAsync(repo);
+        await materialsGrid.BindAsync(_catalogRepository, CatalogList.Materials);
+        await pullsGrid.BindAsync(_catalogRepository, CatalogList.Pulls);
+        await hardwareColorsGrid.BindAsync(_catalogRepository, CatalogList.HardwareColors);
+        await hingesGrid.BindAsync(_catalogRepository, CatalogList.Hinges);
+        await guidesGrid.BindAsync(_catalogRepository, CatalogList.Guides);
+        await finishesGrid.BindAsync(_catalogRepository, _paintColorLookupService);
+        await countertopColorsGrid.BindAsync(_catalogRepository);
     }
 }

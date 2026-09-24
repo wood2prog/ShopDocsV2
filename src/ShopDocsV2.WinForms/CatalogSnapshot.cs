@@ -9,38 +9,47 @@ namespace ShopDocsV2.WinForms;
 /// </summary>
 internal sealed class CatalogSnapshot
 {
-    public List<CatalogMaterial> Materials { get; init; } = [];
+    public IReadOnlyDictionary<CatalogList, List<CatalogItem>> Lists { get; init; } = new Dictionary<CatalogList, List<CatalogItem>>();
     public List<CatalogFinish> Finishes { get; init; } = [];
     public List<CatalogCountertopColor> CountertopColors { get; init; } = [];
-    public List<CatalogPull> Pulls { get; init; } = [];
-    public List<CatalogHardwareColor> HardwareColors { get; init; } = [];
-    public List<CatalogHinge> Hinges { get; init; } = [];
-    public List<CatalogGuide> Guides { get; init; } = [];
 
-    public static async Task<CatalogSnapshot> LoadAsync(ICatalogRepository repository, CancellationToken ct = default) => new()
+    public static async Task<CatalogSnapshot> LoadAsync(ICatalogRepository repository, CancellationToken ct = default)
     {
-        Materials = await repository.GetMaterialsAsync(ct),
-        Finishes = await repository.GetFinishesAsync(ct),
-        CountertopColors = await repository.GetCountertopColorsAsync(ct: ct),
-        Pulls = await repository.GetPullsAsync(ct),
-        HardwareColors = await repository.GetHardwareColorsAsync(ct),
-        Hinges = await repository.GetHingesAsync(ct),
-        Guides = await repository.GetGuidesAsync(ct)
-    };
+        var lists = new Dictionary<CatalogList, List<CatalogItem>>();
+        foreach (var list in Enum.GetValues<CatalogList>())
+        {
+            lists[list] = await repository.GetItemsAsync(list, ct);
+        }
+
+        return new CatalogSnapshot
+        {
+            Lists = lists,
+            Finishes = await repository.GetFinishesAsync(ct),
+            CountertopColors = await repository.GetCountertopColorsAsync(ct: ct)
+        };
+    }
 
     /// <summary>Mirrors the original app's resolveCatalogValues + sortCatalogValues.</summary>
     public IReadOnlyList<string> Resolve(string? catalogSource, string? filterValue) => catalogSource switch
     {
-        "materials" => SortedNames(Materials.Select(m => m.Name)),
         "finishes" => SortedNames(Finishes.Select(f => f.Name)),
         "countertops" => string.IsNullOrEmpty(filterValue)
             ? []
             : SortedNames(CountertopColors.Where(c => c.MaterialName == filterValue).Select(c => c.ColorName)),
-        "pulls" => SortedNames(Pulls.Select(p => p.Name)),
-        "hardware_colors" => SortedNames(HardwareColors.Select(h => h.Name)),
-        "hinges" => SortedNames(Hinges.Select(h => h.Name)),
-        "guides" => SortedNames(Guides.Select(g => g.Name)),
-        _ => []
+        _ => ListForSource(catalogSource) is { } list && Lists.TryGetValue(list, out var items)
+            ? SortedNames(items.Select(i => i.Name))
+            : []
+    };
+
+    /// <summary>Maps a questions.json catalogSource name to its CatalogList, or null if it isn't one of the name-only lists.</summary>
+    private static CatalogList? ListForSource(string? catalogSource) => catalogSource switch
+    {
+        "materials" => CatalogList.Materials,
+        "pulls" => CatalogList.Pulls,
+        "hardware_colors" => CatalogList.HardwareColors,
+        "hinges" => CatalogList.Hinges,
+        "guides" => CatalogList.Guides,
+        _ => null
     };
 
     public string? HexFor(string finishName) => Finishes.FirstOrDefault(f => f.Name == finishName)?.HexColor;

@@ -1,4 +1,5 @@
 using Microsoft.Data.Sqlite;
+using ShopDocsV2.Domain;
 using ShopDocsV2.Infrastructure.Sqlite;
 using Xunit;
 
@@ -17,25 +18,25 @@ public class CatalogRepositoryTests : IDisposable
     }
 
     [Fact]
-    public async Task GetMaterialsAsync_ReturnsSeededRowsFromCatalogJson()
+    public async Task GetItemsAsync_Materials_ReturnsSeededRowsFromCatalogJson()
     {
-        var materials = await _repository.GetMaterialsAsync();
+        var materials = await _repository.GetItemsAsync(CatalogList.Materials);
 
         Assert.Equal(16, materials.Count);
         Assert.Contains(materials, m => m.Name == "Maple");
     }
 
     [Fact]
-    public async Task AddUpdateDeleteMaterial_RoundTrips()
+    public async Task AddUpdateDeleteItem_RoundTrips()
     {
-        var id = await _repository.AddMaterialAsync("Bamboo");
-        Assert.Contains((await _repository.GetMaterialsAsync()), m => m.Id == id && m.Name == "Bamboo");
+        var id = await _repository.AddItemAsync(CatalogList.Materials, "Bamboo");
+        Assert.Contains((await _repository.GetItemsAsync(CatalogList.Materials)), m => m.Id == id && m.Name == "Bamboo");
 
-        await _repository.UpdateMaterialAsync(id, "Bamboo (Renamed)");
-        Assert.Contains((await _repository.GetMaterialsAsync()), m => m.Id == id && m.Name == "Bamboo (Renamed)");
+        await _repository.UpdateItemAsync(CatalogList.Materials, id, "Bamboo (Renamed)");
+        Assert.Contains((await _repository.GetItemsAsync(CatalogList.Materials)), m => m.Id == id && m.Name == "Bamboo (Renamed)");
 
-        await _repository.DeleteMaterialAsync(id);
-        Assert.DoesNotContain((await _repository.GetMaterialsAsync()), m => m.Id == id);
+        await _repository.DeleteItemAsync(CatalogList.Materials, id);
+        Assert.DoesNotContain((await _repository.GetItemsAsync(CatalogList.Materials)), m => m.Id == id);
     }
 
     [Fact]

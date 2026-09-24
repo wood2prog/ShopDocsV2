@@ -7,35 +7,40 @@ namespace ShopDocsV2.Infrastructure.Sqlite;
 
 public sealed class CatalogRepository(SqliteConnectionFactory connectionFactory) : ICatalogRepository
 {
-    public Task<List<CatalogMaterial>> GetMaterialsAsync(CancellationToken ct = default) =>
-        GetNamedAsync("catalog_materials", r => new CatalogMaterial { Id = r.id, Name = r.name, SortOrder = r.sort_order });
-    public Task<int> AddMaterialAsync(string name, CancellationToken ct = default) => AddNamedAsync("catalog_materials", name);
-    public Task UpdateMaterialAsync(int id, string name, CancellationToken ct = default) => UpdateNamedAsync("catalog_materials", id, name);
-    public Task DeleteMaterialAsync(int id, CancellationToken ct = default) => DeleteByIdAsync("catalog_materials", id);
+    public async Task<List<CatalogItem>> GetItemsAsync(CatalogList list, CancellationToken ct = default)
+    {
+        using var connection = connectionFactory.Create();
+        var rows = await connection.QueryAsync<NamedRow>($"SELECT id, name, sort_order FROM {TableFor(list)} ORDER BY sort_order, name");
+        return rows.Select(r => new CatalogItem { Id = r.id, Name = r.name, SortOrder = r.sort_order }).ToList();
+    }
 
-    public Task<List<CatalogPull>> GetPullsAsync(CancellationToken ct = default) =>
-        GetNamedAsync("catalog_pulls", r => new CatalogPull { Id = r.id, Name = r.name, SortOrder = r.sort_order });
-    public Task<int> AddPullAsync(string name, CancellationToken ct = default) => AddNamedAsync("catalog_pulls", name);
-    public Task UpdatePullAsync(int id, string name, CancellationToken ct = default) => UpdateNamedAsync("catalog_pulls", id, name);
-    public Task DeletePullAsync(int id, CancellationToken ct = default) => DeleteByIdAsync("catalog_pulls", id);
+    public async Task<int> AddItemAsync(CatalogList list, string name, CancellationToken ct = default)
+    {
+        var table = TableFor(list);
+        using var connection = connectionFactory.Create();
+        var sortOrder = await NextSortOrderAsync(connection, table);
+        await connection.ExecuteAsync($"INSERT INTO {table} (name, sort_order) VALUES (@name, @sortOrder)", new { name, sortOrder });
+        return await connection.ExecuteScalarAsync<int>("SELECT last_insert_rowid()");
+    }
 
-    public Task<List<CatalogHardwareColor>> GetHardwareColorsAsync(CancellationToken ct = default) =>
-        GetNamedAsync("catalog_hardware_colors", r => new CatalogHardwareColor { Id = r.id, Name = r.name, SortOrder = r.sort_order });
-    public Task<int> AddHardwareColorAsync(string name, CancellationToken ct = default) => AddNamedAsync("catalog_hardware_colors", name);
-    public Task UpdateHardwareColorAsync(int id, string name, CancellationToken ct = default) => UpdateNamedAsync("catalog_hardware_colors", id, name);
-    public Task DeleteHardwareColorAsync(int id, CancellationToken ct = default) => DeleteByIdAsync("catalog_hardware_colors", id);
+    public async Task UpdateItemAsync(CatalogList list, int id, string name, CancellationToken ct = default)
+    {
+        using var connection = connectionFactory.Create();
+        await connection.ExecuteAsync($"UPDATE {TableFor(list)} SET name = @name WHERE id = @id", new { id, name });
+    }
 
-    public Task<List<CatalogHinge>> GetHingesAsync(CancellationToken ct = default) =>
-        GetNamedAsync("catalog_hinges", r => new CatalogHinge { Id = r.id, Name = r.name, SortOrder = r.sort_order });
-    public Task<int> AddHingeAsync(string name, CancellationToken ct = default) => AddNamedAsync("catalog_hinges", name);
-    public Task UpdateHingeAsync(int id, string name, CancellationToken ct = default) => UpdateNamedAsync("catalog_hinges", id, name);
-    public Task DeleteHingeAsync(int id, CancellationToken ct = default) => DeleteByIdAsync("catalog_hinges", id);
+    public Task DeleteItemAsync(CatalogList list, int id, CancellationToken ct = default) => DeleteByIdAsync(TableFor(list), id);
 
-    public Task<List<CatalogGuide>> GetGuidesAsync(CancellationToken ct = default) =>
-        GetNamedAsync("catalog_guides", r => new CatalogGuide { Id = r.id, Name = r.name, SortOrder = r.sort_order });
-    public Task<int> AddGuideAsync(string name, CancellationToken ct = default) => AddNamedAsync("catalog_guides", name);
-    public Task UpdateGuideAsync(int id, string name, CancellationToken ct = default) => UpdateNamedAsync("catalog_guides", id, name);
-    public Task DeleteGuideAsync(int id, CancellationToken ct = default) => DeleteByIdAsync("catalog_guides", id);
+    /// <summary>Maps a CatalogList to its table. Also keeps table names out of caller-supplied strings, since they're interpolated into SQL.</summary>
+    internal static string TableFor(CatalogList list) => list switch
+    {
+        CatalogList.Materials => "catalog_materials",
+        CatalogList.Pulls => "catalog_pulls",
+        CatalogList.HardwareColors => "catalog_hardware_colors",
+        CatalogList.Hinges => "catalog_hinges",
+        CatalogList.Guides => "catalog_guides",
+        _ => throw new ArgumentOutOfRangeException(nameof(list), list, null)
+    };
 
     public async Task<List<CatalogFinish>> GetFinishesAsync(CancellationToken ct = default)
     {
@@ -106,27 +111,6 @@ public sealed class CatalogRepository(SqliteConnectionFactory connectionFactory)
     }
 
     public Task DeleteCountertopColorAsync(int id, CancellationToken ct = default) => DeleteByIdAsync("catalog_countertop_colors", id);
-
-    private async Task<List<T>> GetNamedAsync<T>(string table, Func<NamedRow, T> map)
-    {
-        using var connection = connectionFactory.Create();
-        var rows = await connection.QueryAsync<NamedRow>($"SELECT id, name, sort_order FROM {table} ORDER BY sort_order, name");
-        return rows.Select(map).ToList();
-    }
-
-    private async Task<int> AddNamedAsync(string table, string name)
-    {
-        using var connection = connectionFactory.Create();
-        var sortOrder = await NextSortOrderAsync(connection, table);
-        await connection.ExecuteAsync($"INSERT INTO {table} (name, sort_order) VALUES (@name, @sortOrder)", new { name, sortOrder });
-        return await connection.ExecuteScalarAsync<int>("SELECT last_insert_rowid()");
-    }
-
-    private async Task UpdateNamedAsync(string table, int id, string name)
-    {
-        using var connection = connectionFactory.Create();
-        await connection.ExecuteAsync($"UPDATE {table} SET name = @name WHERE id = @id", new { id, name });
-    }
 
     private async Task DeleteByIdAsync(string table, int id)
     {

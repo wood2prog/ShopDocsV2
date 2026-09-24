@@ -1,3 +1,6 @@
+using ShopDocsV2.Application;
+using ShopDocsV2.Domain;
+
 namespace ShopDocsV2.WinForms;
 
 /// <summary>Reusable add/rename/delete grid for the five catalog kinds that are just an id/name/sort_order table.</summary>
@@ -5,10 +8,8 @@ public partial class SimpleCatalogGrid : UserControl
 {
     private const string RemoveColumnName = "Remove";
 
-    private Func<CancellationToken, Task<List<(int Id, string Name)>>>? _list;
-    private Func<string, CancellationToken, Task<int>>? _add;
-    private Func<int, string, CancellationToken, Task>? _update;
-    private Func<int, CancellationToken, Task>? _delete;
+    private ICatalogRepository? _catalogRepository;
+    private CatalogList _list;
 
     public SimpleCatalogGrid()
     {
@@ -18,27 +19,21 @@ public partial class SimpleCatalogGrid : UserControl
         addButton.Click += AddButton_Click;
     }
 
-    internal async Task BindAsync(
-        Func<CancellationToken, Task<List<(int Id, string Name)>>> list,
-        Func<string, CancellationToken, Task<int>> add,
-        Func<int, string, CancellationToken, Task> update,
-        Func<int, CancellationToken, Task> delete)
+    internal async Task BindAsync(ICatalogRepository catalogRepository, CatalogList list)
     {
+        _catalogRepository = catalogRepository;
         _list = list;
-        _add = add;
-        _update = update;
-        _delete = delete;
         await ReloadAsync();
     }
 
     private async Task ReloadAsync()
     {
-        var items = await _list!(CancellationToken.None);
+        var items = await _catalogRepository!.GetItemsAsync(_list);
         grid.Rows.Clear();
-        foreach (var (id, name) in items)
+        foreach (var item in items)
         {
-            var rowIndex = grid.Rows.Add(name);
-            grid.Rows[rowIndex].Tag = id;
+            var rowIndex = grid.Rows.Add(item.Name);
+            grid.Rows[rowIndex].Tag = item.Id;
         }
     }
 
@@ -50,7 +45,7 @@ public partial class SimpleCatalogGrid : UserControl
             return;
         }
 
-        await _add!(name.Trim(), CancellationToken.None);
+        await _catalogRepository!.AddItemAsync(_list, name.Trim());
         await ReloadAsync();
     }
 
@@ -67,7 +62,7 @@ public partial class SimpleCatalogGrid : UserControl
             return;
         }
 
-        await _update!(id, name.Trim(), CancellationToken.None);
+        await _catalogRepository!.UpdateItemAsync(_list, id, name.Trim());
     }
 
     private async void Grid_CellContentClick(object? sender, DataGridViewCellEventArgs e)
@@ -89,7 +84,7 @@ public partial class SimpleCatalogGrid : UserControl
             return;
         }
 
-        await _delete!(id, CancellationToken.None);
+        await _catalogRepository!.DeleteItemAsync(_list, id);
         await ReloadAsync();
     }
 }

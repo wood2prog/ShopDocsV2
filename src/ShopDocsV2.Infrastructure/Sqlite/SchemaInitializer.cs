@@ -3,6 +3,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Dapper;
 using Microsoft.Data.Sqlite;
+using ShopDocsV2.Domain;
 
 namespace ShopDocsV2.Infrastructure.Sqlite;
 
@@ -35,12 +36,12 @@ public sealed class SchemaInitializer(SqliteConnectionFactory connectionFactory)
 
         using var transaction = connection.BeginTransaction();
 
-        InsertNamed(connection, transaction, "catalog_materials", seed.Materials);
+        InsertNamed(connection, transaction, CatalogRepository.TableFor(CatalogList.Materials), seed.Materials);
         InsertNamed(connection, transaction, "catalog_finishes", seed.Finishes);
-        InsertNamed(connection, transaction, "catalog_pulls", seed.Pulls);
-        InsertNamed(connection, transaction, "catalog_hardware_colors", seed.HardwareColors);
-        InsertNamed(connection, transaction, "catalog_hinges", seed.Hinges);
-        InsertNamed(connection, transaction, "catalog_guides", seed.Guides);
+        InsertNamed(connection, transaction, CatalogRepository.TableFor(CatalogList.Pulls), seed.Pulls);
+        InsertNamed(connection, transaction, CatalogRepository.TableFor(CatalogList.HardwareColors), seed.HardwareColors);
+        InsertNamed(connection, transaction, CatalogRepository.TableFor(CatalogList.Hinges), seed.Hinges);
+        InsertNamed(connection, transaction, CatalogRepository.TableFor(CatalogList.Guides), seed.Guides);
 
         var sortOrder = 0;
         foreach (var (materialName, colorNames) in seed.Countertops)
