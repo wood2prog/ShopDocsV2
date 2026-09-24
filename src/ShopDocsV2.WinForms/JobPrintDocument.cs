@@ -92,7 +92,7 @@ internal sealed class JobPrintDocument : PrintDocument
 
             if (sections.Count == 0)
             {
-                Add("No details entered for this room.", _normalFont, 0);
+                Add(RoomSpecSection.NoDetailsText, _normalFont, 0);
             }
 
             foreach (var section in sections)
@@ -100,20 +100,13 @@ internal sealed class JobPrintDocument : PrintDocument
                 Add(section.Title, _sectionTitleFont, 0, keepWithNext: true);
                 foreach (var line in section.Lines)
                 {
-                    if (line.IsList)
+                    var textLines = line.ToTextLines().ToList();
+                    for (var i = 0; i < textLines.Count; i++)
                     {
-                        if (line.ShowLabel)
-                        {
-                            Add($"{line.Label}:", _normalFont, 0, keepWithNext: true);
-                        }
-                        foreach (var listLine in line.ListLines ?? [])
-                        {
-                            Add(listLine, _normalFont, 20);
-                        }
-                    }
-                    else
-                    {
-                        Add(line.ShowLabel ? $"{line.Label}: {line.Value}" : line.Value ?? "", _normalFont, 0);
+                        var (text, isListItem) = textLines[i];
+                        // A list's "Label:" line stays on the same page as its first row.
+                        var keepWithNext = !isListItem && i + 1 < textLines.Count && textLines[i + 1].IsListItem;
+                        Add(text, _normalFont, isListItem ? 20 : 0, keepWithNext);
                     }
                 }
             }

@@ -146,4 +146,17 @@ public class SpecFormattingServiceTests
         Assert.DoesNotContain("Phone:", text);
         Assert.True(text.IndexOf("Kitchen", StringComparison.Ordinal) < text.IndexOf("Pantry", StringComparison.Ordinal));
     }
+
+    [Fact]
+    public void ToTextLines_ValueAndListLines_FormatLabelsAndFlagListRows()
+    {
+        var value = new RoomSpecLine(IsList: false, "Door Style", ShowLabel: true, Value: "Shaker", ListLines: null);
+        var bareValue = value with { ShowLabel = false };
+        var list = new RoomSpecLine(IsList: true, "Sinks", ShowLabel: true, Value: null, ListLines: ["Undermount", "Farmhouse"]);
+
+        Assert.Equal([("Door Style: Shaker", false)], value.ToTextLines());
+        Assert.Equal([("Shaker", false)], bareValue.ToTextLines());
+        Assert.Equal([("Sinks:", false), ("Undermount", true), ("Farmhouse", true)], list.ToTextLines());
+        Assert.Equal([("Undermount", true), ("Farmhouse", true)], (list with { ShowLabel = false }).ToTextLines());
+    }
 }

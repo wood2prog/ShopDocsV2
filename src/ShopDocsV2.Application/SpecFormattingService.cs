@@ -103,22 +103,16 @@ public sealed class SpecFormattingService : ISpecFormattingService
         var sections = GetRoomSpecSections(room, questionSet);
         if (sections.Count == 0)
         {
-            lines.Add("No details entered for this room.");
+            lines.Add(RoomSpecSection.NoDetailsText);
             return JoinTrimmed(lines);
         }
 
         foreach (var section in sections)
         {
             lines.Add(section.Title);
-            foreach (var item in section.Lines)
+            foreach (var (text, isListItem) in section.Lines.SelectMany(l => l.ToTextLines()))
             {
-                if (item.IsList)
-                {
-                    if (item.ShowLabel) lines.Add($"{item.Label}:");
-                    foreach (var l in item.ListLines ?? Array.Empty<string>()) lines.Add($"  {l}");
-                    continue;
-                }
-                lines.Add(item.ShowLabel ? $"{item.Label}: {item.Value}" : $"{item.Value}");
+                lines.Add(isListItem ? $"  {text}" : text);
             }
             lines.Add("");
         }
