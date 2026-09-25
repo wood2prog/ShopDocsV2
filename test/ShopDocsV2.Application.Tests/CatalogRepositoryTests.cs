@@ -56,6 +56,26 @@ public class CatalogRepositoryTests : IDisposable
     }
 
     [Fact]
+    public async Task AddUpdateDeleteAccessory_RoundTripsModelNumberAndUrl()
+    {
+        Assert.Empty(await _repository.GetAccessoriesAsync());
+
+        var id = await _repository.AddAccessoryAsync("Lazy Susan", null, null);
+        var afterAdd = (await _repository.GetAccessoriesAsync()).Single(a => a.Id == id);
+        Assert.Equal("Lazy Susan", afterAdd.Name);
+        Assert.Null(afterAdd.ModelNumber);
+        Assert.Null(afterAdd.Url);
+
+        await _repository.UpdateAccessoryAsync(id, "Lazy Susan", "LD-4NB-001-24", "https://example.com/ld-4nb");
+        var afterUpdate = (await _repository.GetAccessoriesAsync()).Single(a => a.Id == id);
+        Assert.Equal("LD-4NB-001-24", afterUpdate.ModelNumber);
+        Assert.Equal("https://example.com/ld-4nb", afterUpdate.Url);
+
+        await _repository.DeleteAccessoryAsync(id);
+        Assert.Empty(await _repository.GetAccessoriesAsync());
+    }
+
+    [Fact]
     public async Task GetCountertopColorsAsync_FiltersByMaterialName()
     {
         var quartzId = await _repository.AddCountertopColorAsync("Quartz", "Test Quartz Color");

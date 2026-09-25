@@ -19,6 +19,16 @@ public sealed class CatalogFinish
     public int SortOrder { get; set; }
 }
 
+/// <summary>An add-on product (e.g. a pull-out or organizer) with its model number and a web page for it.</summary>
+public sealed class CatalogAccessory
+{
+    public int Id { get; set; }
+    public string Name { get; set; } = "";
+    public string? ModelNumber { get; set; }
+    public string? Url { get; set; }
+    public int SortOrder { get; set; }
+}
+
 /// <summary>
 /// MaterialName matches questions.json's static countertops.material options (Quartz/Granite/...),
 /// which is a different concept from the Materials catalog list (wood species used by cabinet_finishes.wood).

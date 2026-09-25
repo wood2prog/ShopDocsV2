@@ -36,6 +36,8 @@ CREATE TABLE IF NOT EXISTS catalog_finishes         (id INTEGER PRIMARY KEY AUTO
 CREATE TABLE IF NOT EXISTS catalog_countertop_colors(id INTEGER PRIMARY KEY AUTOINCREMENT, material_name TEXT NOT NULL, color_name TEXT NOT NULL, sort_order INTEGER NOT NULL DEFAULT 0, UNIQUE(material_name, color_name));
 CREATE TABLE IF NOT EXISTS catalog_pulls            (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL UNIQUE, sort_order INTEGER NOT NULL DEFAULT 0);
 CREATE TABLE IF NOT EXISTS catalog_hardware_colors  (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL UNIQUE, sort_order INTEGER NOT NULL DEFAULT 0);
+-- Added in 1.0.40; not seeded. Name isn't unique since one accessory can come in several models.
+CREATE TABLE IF NOT EXISTS catalog_accessories      (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, model_number TEXT, url TEXT, sort_order INTEGER NOT NULL DEFAULT 0);
 
 -- Hinges and guides catalogs were removed in 1.0.29 (no question ever used them); clean them out of older databases.
 DROP TABLE IF EXISTS catalog_hinges;

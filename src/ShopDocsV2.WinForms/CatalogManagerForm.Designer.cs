@@ -13,12 +13,14 @@ partial class CatalogManagerForm
     private TabPage countertopColorsTabPage = null!;
     private TabPage pullsTabPage = null!;
     private TabPage hardwareColorsTabPage = null!;
+    private TabPage accessoriesTabPage = null!;
 
     private SimpleCatalogGrid materialsGrid = null!;
     private FinishesGrid finishesGrid = null!;
     private CountertopColorsGrid countertopColorsGrid = null!;
     private SimpleCatalogGrid pullsGrid = null!;
     private SimpleCatalogGrid hardwareColorsGrid = null!;
+    private AccessoriesGrid accessoriesGrid = null!;
 
     protected override void Dispose(bool disposing)
     {
@@ -42,12 +44,14 @@ partial class CatalogManagerForm
         countertopColorsTabPage = new TabPage("Countertop Colors");
         pullsTabPage = new TabPage("Pulls");
         hardwareColorsTabPage = new TabPage("Hardware Colors");
+        accessoriesTabPage = new TabPage("Accessories");
 
         materialsGrid = new SimpleCatalogGrid();
         finishesGrid = new FinishesGrid();
         countertopColorsGrid = new CountertopColorsGrid();
         pullsGrid = new SimpleCatalogGrid();
         hardwareColorsGrid = new SimpleCatalogGrid();
+        accessoriesGrid = new AccessoriesGrid();
 
         SuspendLayout();
 
@@ -56,6 +60,7 @@ partial class CatalogManagerForm
         countertopColorsTabPage.Controls.Add(countertopColorsGrid);
         pullsTabPage.Controls.Add(pullsGrid);
         hardwareColorsTabPage.Controls.Add(hardwareColorsGrid);
+        accessoriesTabPage.Controls.Add(accessoriesGrid);
 
         tabControl.Dock = DockStyle.Fill;
         tabControl.TabPages.AddRange(
@@ -64,7 +69,8 @@ partial class CatalogManagerForm
             finishesTabPage,
             countertopColorsTabPage,
             pullsTabPage,
-            hardwareColorsTabPage
+            hardwareColorsTabPage,
+            accessoriesTabPage
         ]);
 
         searchTextBox.Dock = DockStyle.Fill;

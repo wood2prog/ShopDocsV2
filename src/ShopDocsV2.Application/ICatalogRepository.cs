@@ -19,4 +19,9 @@ public interface ICatalogRepository
     Task UpdateCountertopColorAsync(int id, string materialName, string colorName);
     Task DeleteCountertopColorAsync(int id);
 
+    Task<List<CatalogAccessory>> GetAccessoriesAsync();
+    Task<int> AddAccessoryAsync(string name, string? modelNumber, string? url);
+    Task UpdateAccessoryAsync(int id, string name, string? modelNumber, string? url);
+    Task DeleteAccessoryAsync(int id);
+
 }

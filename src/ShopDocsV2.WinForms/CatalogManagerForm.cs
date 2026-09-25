@@ -35,6 +35,7 @@ public partial class CatalogManagerForm : Form
         await hardwareColorsGrid.BindAsync(_catalogRepository, CatalogList.HardwareColors);
         await finishesGrid.BindAsync(_catalogRepository, _paintColorLookupService);
         await countertopColorsGrid.BindAsync(_catalogRepository, _questionSet);
+        await accessoriesGrid.BindAsync(_catalogRepository);
     }
 
     /// <summary>A catalog row whose searched column contains the search text.</summary>
@@ -44,35 +45,39 @@ public partial class CatalogManagerForm : Form
     }
 
     /// <summary>
-    /// Every row, across all tabs, whose name contains the search text (names starting with it first).
+    /// Every row, across all tabs, whose name (or accessory model number) contains the search text (values starting with it first).
     /// Reads the grids rather than the database, since they hold edits the moment they're made.
     /// </summary>
     private List<SearchHit> FindSearchHits(string text)
     {
-        var sources = new (TabPage Tab, DataGridView Grid, string ColumnName)[]
+        // Searched columns, then columns whose value is shown in brackets to tell similar hits apart
+        // (countertop colors repeat across materials; an accessory hit shows its model number or name).
+        var sources = new (TabPage Tab, DataGridView Grid, string[] Columns, string[] DetailColumns)[]
         {
-            (materialsTabPage, materialsGrid.Grid, "Name"),
-            (finishesTabPage, finishesGrid.Grid, "Name"),
-            (countertopColorsTabPage, countertopColorsGrid.Grid, "Color"),
-            (pullsTabPage, pullsGrid.Grid, "Name"),
-            (hardwareColorsTabPage, hardwareColorsGrid.Grid, "Name")
+            (materialsTabPage, materialsGrid.Grid, ["Name"], []),
+            (finishesTabPage, finishesGrid.Grid, ["Name"], []),
+            (countertopColorsTabPage, countertopColorsGrid.Grid, ["Color"], ["Material"]),
+            (pullsTabPage, pullsGrid.Grid, ["Name"], []),
+            (hardwareColorsTabPage, hardwareColorsGrid.Grid, ["Name"], []),
+            (accessoriesTabPage, accessoriesGrid.Grid, ["Name", "Model"], ["Model", "Name"])
         };
 
         var hits = new List<(SearchHit Hit, bool IsPrefix)>();
-        foreach (var (tab, grid, columnName) in sources)
+        foreach (var (tab, grid, columns, detailColumns) in sources)
         {
             foreach (DataGridViewRow row in grid.Rows)
             {
-                var value = row.Cells[columnName].Value as string ?? "";
-                if (!value.Contains(text, StringComparison.OrdinalIgnoreCase))
+                string CellText(string column) => row.Cells[column].Value as string ?? "";
+
+                var columnName = columns.FirstOrDefault(c => CellText(c).Contains(text, StringComparison.OrdinalIgnoreCase));
+                if (columnName is null)
                 {
                     continue;
                 }
 
-                // Countertop colors repeat across materials, so name the material too.
-                var label = tab == countertopColorsTabPage && row.Cells["Material"].Value is string material
-                    ? $"{value} ({material})"
-                    : value;
+                var value = CellText(columnName);
+                var detail = detailColumns.Where(c => c != columnName).Select(CellText).FirstOrDefault(d => d.Length > 0);
+                var label = detail is null ? value : $"{value} ({detail})";
                 hits.Add((new SearchHit(tab, grid, row.Index, columnName, $"{label}  —  {tab.Text}"),
                     value.StartsWith(text, StringComparison.OrdinalIgnoreCase)));
             }

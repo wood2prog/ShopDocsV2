@@ -110,6 +110,41 @@ public sealed class CatalogRepository(SqliteConnectionFactory connectionFactory)
 
     public Task DeleteCountertopColorAsync(int id) => DeleteByIdAsync("catalog_countertop_colors", id);
 
+    public async Task<List<CatalogAccessory>> GetAccessoriesAsync()
+    {
+        using var connection = connectionFactory.Create();
+        var rows = await connection.QueryAsync<AccessoryRow>(
+            "SELECT id, name, model_number, url, sort_order FROM catalog_accessories ORDER BY sort_order, name");
+        return rows.Select(r => new CatalogAccessory
+        {
+            Id = r.id,
+            Name = r.name,
+            ModelNumber = r.model_number,
+            Url = r.url,
+            SortOrder = r.sort_order
+        }).ToList();
+    }
+
+    public async Task<int> AddAccessoryAsync(string name, string? modelNumber, string? url)
+    {
+        using var connection = connectionFactory.Create();
+        var sortOrder = await NextSortOrderAsync(connection, "catalog_accessories");
+        await connection.ExecuteAsync(
+            "INSERT INTO catalog_accessories (name, model_number, url, sort_order) VALUES (@name, @modelNumber, @url, @sortOrder)",
+            new { name, modelNumber, url, sortOrder });
+        return await connection.ExecuteScalarAsync<int>("SELECT last_insert_rowid()");
+    }
+
+    public async Task UpdateAccessoryAsync(int id, string name, string? modelNumber, string? url)
+    {
+        using var connection = connectionFactory.Create();
+        await connection.ExecuteAsync(
+            "UPDATE catalog_accessories SET name = @name, model_number = @modelNumber, url = @url WHERE id = @id",
+            new { id, name, modelNumber, url });
+    }
+
+    public Task DeleteAccessoryAsync(int id) => DeleteByIdAsync("catalog_accessories", id);
+
     private async Task DeleteByIdAsync(string table, int id)
     {
         using var connection = connectionFactory.Create();
@@ -139,6 +174,15 @@ public sealed class CatalogRepository(SqliteConnectionFactory connectionFactory)
         public int id { get; set; }
         public string material_name { get; set; } = "";
         public string color_name { get; set; } = "";
+        public int sort_order { get; set; }
+    }
+
+    private sealed class AccessoryRow
+    {
+        public int id { get; set; }
+        public string name { get; set; } = "";
+        public string? model_number { get; set; }
+        public string? url { get; set; }
         public int sort_order { get; set; }
     }
 }

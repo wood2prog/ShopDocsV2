@@ -23,7 +23,7 @@ public class SchemaInitializerTests : IDisposable
         Assert.Equal(
             new[]
             {
-                "catalog_countertop_colors", "catalog_finishes", "catalog_hardware_colors",
+                "catalog_accessories", "catalog_countertop_colors", "catalog_finishes", "catalog_hardware_colors",
                 "catalog_materials", "catalog_pulls", "jobs", "room_answers",
                 "room_list_item_values", "room_list_items", "rooms", "schema_version"
             },
