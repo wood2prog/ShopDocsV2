@@ -60,8 +60,7 @@ public sealed class QuestionSetFileProvider(string? settingsFilePath = null) : I
     {
         try
         {
-            Directory.CreateDirectory(Path.GetDirectoryName(_settingsFilePath)!);
-            File.WriteAllText(_settingsFilePath, JsonSerializer.Serialize(new AppSettingsDto { QuestionsPath = path }));
+            SettingsFile.Update(_settingsFilePath, settings => settings[nameof(AppSettingsDto.QuestionsPath)] = path);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
@@ -94,7 +93,8 @@ public sealed class QuestionSetFileProvider(string? settingsFilePath = null) : I
         AddLabel = dto.AddLabel,
         ItemFields = dto.ItemFields?.Select(MapQuestion).ToList(),
         PrintGroup = dto.PrintGroup,
-        PrintSuffix = dto.PrintSuffix
+        PrintSuffix = dto.PrintSuffix,
+        Shortcut = dto.Shortcut
     };
 
     /// <summary>Unknown or absent type strings fall back to Text, mirroring the original app.js's implicit default.</summary>
@@ -142,6 +142,7 @@ public sealed class QuestionSetFileProvider(string? settingsFilePath = null) : I
         public List<QuestionDefDto>? ItemFields { get; set; }
         public string? PrintGroup { get; set; }
         public string? PrintSuffix { get; set; }
+        public string? Shortcut { get; set; }
     }
 
     private sealed class ShowIfDto

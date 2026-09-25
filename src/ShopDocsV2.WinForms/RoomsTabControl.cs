@@ -122,6 +122,53 @@ public partial class RoomsTabControl : UserControl
         RoomsChanged?.Invoke(this, EventArgs.Empty);
     }
 
+    /// <summary>Selects the room delta tabs away (wrapping around), leaving focus on the tab strip.</summary>
+    public void SelectAdjacentRoom(int delta)
+    {
+        var count = tabControl.TabPages.Count;
+        if (count == 0)
+        {
+            return;
+        }
+
+        tabControl.SelectedIndex = ((tabControl.SelectedIndex + delta) % count + count) % count;
+        tabControl.Focus();
+    }
+
+    /// <summary>Scrolls the selected room to a List question's grid and starts a new line in it.</summary>
+    public void StartNewListItem(string questionId)
+    {
+        if (tabControl.SelectedTab is not { } page)
+        {
+            return;
+        }
+
+        BuildTabContent(page);
+        var editor = Descendants(page).OfType<ListFieldEditor>().FirstOrDefault(e => e.QuestionId == questionId);
+        if (editor is null)
+        {
+            return;
+        }
+
+        if (page.Controls.Count > 0 && page.Controls[0] is ScrollableControl scrollPanel && editor.Parent is { } groupBox)
+        {
+            scrollPanel.ScrollControlIntoView(groupBox);
+        }
+        editor.StartNewItem();
+    }
+
+    private static IEnumerable<Control> Descendants(Control parent)
+    {
+        foreach (Control child in parent.Controls)
+        {
+            yield return child;
+            foreach (var descendant in Descendants(child))
+            {
+                yield return descendant;
+            }
+        }
+    }
+
     private TabPage AddTabForRoom(Room room)
     {
         var page = new TabPage(TabTitle(room));

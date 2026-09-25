@@ -17,6 +17,7 @@
           "id": "cabinet_finishes",
           "label": "Cabinet Finishes",
           "type": "list",
+          "shortcut": "Ctrl+F",
           "addLabel": "+ Add Cabinet Finish",
           "itemFields": [
             { "id": "name", "label": "Name", "placeholder": "e.g. Perimeter Upper, Perimeter Base, Island" },
@@ -28,6 +29,7 @@
           "id": "cabinet_hardware",
           "label": "Hardware (pulls, knobs)",
           "type": "list",
+          "shortcut": "Ctrl+H",
           "addLabel": "+ Add Hardware",
           "itemFields": [
             { "id": "name", "label": "Name", "placeholder": "e.g. Pull, Knob" },
@@ -46,6 +48,7 @@
           "id": "countertops",
           "label": "Countertops",
           "type": "list",
+          "shortcut": "Ctrl+T",
           "addLabel": "+ Add Countertop",
           "itemFields": [
             {
@@ -78,6 +81,7 @@
           "id": "sinks",
           "label": "Sinks",
           "type": "list",
+          "shortcut": "Ctrl+K",
           "addLabel": "+ Add Sink",
           "itemFields": [
             { "id": "sink_type", "label": "Sink Type", "placeholder": "Sink Type" },
@@ -94,6 +98,7 @@
           "id": "appliance_package",
           "label": "Appliances",
           "type": "list",
+          "shortcut": "Ctrl+L",
           "addLabel": "+ Add Appliance",
           "itemFields": [
             { "id": "name", "label": "Appliance", "placeholder": "e.g. Range, Dishwasher" },
@@ -112,6 +117,7 @@
           "id": "accessories",
           "label": "Accessories",
           "type": "list",
+          "shortcut": "Ctrl+E",
           "addLabel": "+ Add Accessory",
           "itemFields": [
             { "id": "accessory", "label": "Accessory", "type": "select", "catalogSource": "accessories", "catalogLink": true },
@@ -127,6 +133,7 @@
           "id": "notes",
           "label": "Notes",
           "type": "list",
+          "shortcut": "Ctrl+M",
           "addLabel": "+ Add Note",
           "itemFields": [
             { "id": "text", "label": "Note", "placeholder": "Note" }

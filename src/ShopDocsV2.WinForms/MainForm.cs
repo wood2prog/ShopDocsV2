@@ -13,6 +13,10 @@ public partial class MainForm : Form
     private readonly IJobPrintContentBuilder _jobPrintContentBuilder;
     private readonly IPaintColorLookupService _paintColorLookupService;
     private readonly IOrdxExportService _ordxExportService;
+    private readonly IKeyBindingStore _keyBindingStore;
+    /// <summary>Menu commands that are always present; the Go to Group ones come from the question set (_groupCommands).</summary>
+    private readonly List<KeyBindingCommand> _menuCommands;
+    private List<KeyBindingCommand> _groupCommands = [];
     private readonly System.Windows.Forms.Timer _saveDebounceTimer;
     private Job? _currentJob;
     /// <summary>False for a New Job that hasn't been written yet; it's inserted on the first save that finds content in it.</summary>
@@ -27,7 +31,8 @@ public partial class MainForm : Form
         ISpecFormattingService specFormattingService,
         IJobPrintContentBuilder jobPrintContentBuilder,
         IPaintColorLookupService paintColorLookupService,
-        IOrdxExportService ordxExportService)
+        IOrdxExportService ordxExportService,
+        IKeyBindingStore keyBindingStore)
     {
         _jobRepository = jobRepository;
         _questionSetProvider = questionSetProvider;
@@ -36,8 +41,31 @@ public partial class MainForm : Form
         _jobPrintContentBuilder = jobPrintContentBuilder;
         _paintColorLookupService = paintColorLookupService;
         _ordxExportService = ordxExportService;
+        _keyBindingStore = keyBindingStore;
         InitializeComponent();
         WindowPlacementStore.Restore(this);
+
+        // Defaults are the shortcuts set in the Designer; ids are what settings.json stores, so don't rename them.
+        _menuCommands =
+        [
+            MenuCommand("file.new", "File", newJobMenuItem),
+            MenuCommand("file.open", "File", openJobMenuItem),
+            MenuCommand("file.duplicate", "File", duplicateJobMenuItem),
+            MenuCommand("file.save", "File", saveMenuItem),
+            MenuCommand("room.add", "Room", addRoomMenuItem),
+            MenuCommand("room.rename", "Room", renameRoomMenuItem),
+            MenuCommand("room.remove", "Room", removeRoomMenuItem),
+            MenuCommand("room.next", "Room", nextRoomMenuItem),
+            MenuCommand("room.previous", "Room", previousRoomMenuItem),
+            MenuCommand("export.printPreview", "Export", printPreviewMenuItem),
+            MenuCommand("export.print", "Export", printMenuItem),
+            MenuCommand("export.copyRoom", "Export", copyRoomMenuItem),
+            MenuCommand("export.text", "Export", exportTextMenuItem),
+            MenuCommand("export.ordx", "Export", exportOrdxMenuItem),
+            MenuCommand("tools.catalogManager", "Tools", catalogManagerMenuItem),
+            MenuCommand("tools.reloadQuestions", "Tools", reloadQuestionsMenuItem)
+        ];
+        ApplyKeyBindings();
 
         // Registered with the Designer's components container so it's disposed along with the form.
         _saveDebounceTimer = new System.Windows.Forms.Timer(components!) { Interval = 1000 };
@@ -91,6 +119,66 @@ public partial class MainForm : Form
     {
         _questionSet = questionSet;
         roomsTabControl.SetQuestionSet(questionSet);
+        RebuildGoToGroupMenu();
+    }
+
+    private static KeyBindingCommand MenuCommand(string id, string menuName, ToolStripMenuItem item) =>
+        new(id, $"{menuName}: {item.Text!.Replace("&", "").TrimEnd('.')}", item.ShortcutKeys, item);
+
+    /// <summary>One Go to Group item per List question, defaulting to the shortcut given in questions.json.</summary>
+    private void RebuildGoToGroupMenu()
+    {
+        foreach (var oldItem in goToGroupMenuItem.DropDownItems.Cast<ToolStripItem>().ToList())
+        {
+            oldItem.Dispose();
+        }
+
+        _groupCommands = [];
+        foreach (var question in _questionSet.Sections.SelectMany(s => s.Questions).Where(q => q.Type == QuestionType.List))
+        {
+            var questionId = question.Id;
+            var item = new ToolStripMenuItem(question.Label) { Enabled = _currentJob is not null };
+            item.Click += (_, _) => roomsTabControl.StartNewListItem(questionId);
+            goToGroupMenuItem.DropDownItems.Add(item);
+
+            var defaultKeys = KeyBindings.TryParse(question.Shortcut, out var keys) ? keys : Keys.None;
+            _groupCommands.Add(new KeyBindingCommand($"group.{questionId}", $"Go to Group: {question.Label}", defaultKeys, item));
+        }
+        goToGroupMenuItem.Visible = _groupCommands.Count > 0;
+
+        ApplyKeyBindings();
+    }
+
+    private List<KeyBindingCommand> AllKeyBindingCommands() => [.. _menuCommands, .. _groupCommands];
+
+    private void ApplyKeyBindings() => KeyBindings.Apply(AllKeyBindingCommands(), _keyBindingStore.Load());
+
+    private void KeyboardShortcutsMenuItem_Click(object? sender, EventArgs e)
+    {
+        var commands = AllKeyBindingCommands();
+        if (!KeyBindingsDialog.Show(this, commands))
+        {
+            return;
+        }
+
+        // Keep saved bindings for groups that aren't in the current question set (e.g. while a different questions.json is loaded).
+        var currentIds = commands.Select(c => c.Id).ToHashSet();
+        var bindings = _keyBindingStore.Load().Where(b => !currentIds.Contains(b.Key)).ToDictionary(b => b.Key, b => b.Value);
+        foreach (var (id, shortcut) in KeyBindings.Overrides(commands))
+        {
+            bindings[id] = shortcut;
+        }
+
+        try
+        {
+            _keyBindingStore.Save(bindings);
+            SetStatus("Keyboard shortcuts saved");
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            MessageBox.Show(this, $"The new shortcuts work now, but could not be saved for next time:\n{ex.Message}",
+                "Keyboard Shortcuts", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        }
     }
 
     private async void NewJobMenuItem_Click(object? sender, EventArgs e)
@@ -162,6 +250,10 @@ public partial class MainForm : Form
     private void RenameRoomMenuItem_Click(object? sender, EventArgs e) => roomsTabControl.RenameSelectedRoom();
 
     private void RemoveRoomMenuItem_Click(object? sender, EventArgs e) => roomsTabControl.RemoveSelectedRoom();
+
+    private void NextRoomMenuItem_Click(object? sender, EventArgs e) => roomsTabControl.SelectAdjacentRoom(1);
+
+    private void PreviousRoomMenuItem_Click(object? sender, EventArgs e) => roomsTabControl.SelectAdjacentRoom(-1);
 
     private void PrintPreviewMenuItem_Click(object? sender, EventArgs e)
     {
@@ -360,7 +452,9 @@ public partial class MainForm : Form
         ToolStripItem[] jobMenuItems =
         [
             saveMenuItem, duplicateJobMenuItem, addRoomMenuItem, renameRoomMenuItem, removeRoomMenuItem,
-            printPreviewMenuItem, printMenuItem, copyRoomMenuItem, exportTextMenuItem, exportOrdxMenuItem
+            nextRoomMenuItem, previousRoomMenuItem, goToGroupMenuItem,
+            printPreviewMenuItem, printMenuItem, copyRoomMenuItem, exportTextMenuItem, exportOrdxMenuItem,
+            .. goToGroupMenuItem.DropDownItems.Cast<ToolStripItem>()
         ];
         foreach (var item in jobMenuItems)
         {

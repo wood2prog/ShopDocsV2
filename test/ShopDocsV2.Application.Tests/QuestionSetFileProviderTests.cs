@@ -34,7 +34,7 @@ public class QuestionSetFileProviderTests : IDisposable
                     { "id": "shelf_count", "label": "Shelf Count", "type": "number" },
                     { "id": "cutout_width", "label": "Cutout W", "type": "dimension" },
                     { "id": "no_type_field", "label": "No Type" },
-                    { "id": "cabinet_finishes", "label": "Cabinet Finishes", "type": "list", "addLabel": "+ Add",
+                    { "id": "cabinet_finishes", "label": "Cabinet Finishes", "type": "list", "addLabel": "+ Add", "shortcut": "Ctrl+F",
                       "itemFields": [
                         { "id": "wood", "label": "Wood", "type": "select", "catalogSource": "materials", "printGroup": "Cutout", "printSuffix": "W", "catalogLink": true }
                       ]
@@ -64,6 +64,7 @@ public class QuestionSetFileProviderTests : IDisposable
         var listQuestion = byId["cabinet_finishes"];
         Assert.Equal(QuestionType.List, listQuestion.Type);
         Assert.Equal("+ Add", listQuestion.AddLabel);
+        Assert.Equal("Ctrl+F", listQuestion.Shortcut);
         var itemField = Assert.Single(listQuestion.ItemFields!);
         Assert.Equal("materials", itemField.CatalogSource);
         Assert.Equal("Cutout", itemField.PrintGroup);
@@ -87,6 +88,20 @@ public class QuestionSetFileProviderTests : IDisposable
         await File.WriteAllTextAsync(_filePath, "{ not valid json");
 
         await Assert.ThrowsAsync<QuestionSetLoadException>(() => _provider.LoadAsync(_filePath));
+    }
+
+    [Fact]
+    public async Task LoadAsync_ExplicitPath_RemembersPathWithoutDroppingKeyBindings()
+    {
+        await File.WriteAllTextAsync(_filePath, """{ "sections": [] }""");
+        var keyBindingStore = new KeyBindingSettingsStore(_settingsPath);
+        keyBindingStore.Save(new Dictionary<string, string> { ["room.add"] = "Ctrl+Q" });
+
+        await _provider.LoadAsync(_filePath);
+
+        Assert.Equal("Ctrl+Q", keyBindingStore.Load()["room.add"]);
+        using var settings = System.Text.Json.JsonDocument.Parse(await File.ReadAllTextAsync(_settingsPath));
+        Assert.Equal(_filePath, settings.RootElement.GetProperty("QuestionsPath").GetString());
     }
 
     public void Dispose()

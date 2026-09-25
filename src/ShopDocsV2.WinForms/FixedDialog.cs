@@ -1,6 +1,6 @@
 namespace ShopDocsV2.WinForms;
 
-/// <summary>Window setup shared by the small code-built dialogs (PromptDialog, ColorEditDialog, AboutDialog).</summary>
+/// <summary>Window setup shared by the small code-built dialogs (PromptDialog, ColorEditDialog, AboutDialog, KeyBindingsDialog).</summary>
 internal static class FixedDialog
 {
     /// <summary>A non-resizable dialog centered on its owner, with no minimize/maximize buttons or taskbar entry.</summary>

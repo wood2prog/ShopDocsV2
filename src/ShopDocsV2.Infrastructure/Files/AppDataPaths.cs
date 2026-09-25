@@ -20,7 +20,7 @@ public static class AppDataPaths
 
     public static string DataDirectory => LazyDataDirectory.Value;
 
-    /// <summary>App settings (currently just the remembered questions.json path).</summary>
+    /// <summary>App settings: the remembered questions.json path and customized key bindings.</summary>
     public static string SettingsFilePath => Path.Combine(DataDirectory, SettingsFileName);
 
     private static string CreateDataDirectory()

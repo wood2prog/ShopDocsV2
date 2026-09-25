@@ -250,17 +250,44 @@ public partial class ListFieldEditor : UserControl
     private QuestionDef? CatalogFieldAt(int columnIndex) =>
         FieldAt(columnIndex) is { CatalogSource: { Length: > 0 } } field ? field : null;
 
-    private void AddButton_Click(object? sender, EventArgs e)
+    /// <summary>The List question this editor shows, or null before Bind().</summary>
+    internal string? QuestionId => _question?.Id;
+
+    private void AddButton_Click(object? sender, EventArgs e) => AddItem();
+
+    /// <summary>
+    /// Puts the cursor in the first cell of a new line, ready to type. If the last line is still blank it's
+    /// reused instead, so pressing the shortcut repeatedly doesn't stack up empty lines.
+    /// </summary>
+    internal void StartNewItem()
+    {
+        grid.EndEdit();
+        var lastIndex = grid.Rows.Count - 1;
+        if (lastIndex >= 0 && grid.Rows[lastIndex].Tag is RoomListItem last && last.Fields.Values.All(v => v.IsBlank))
+        {
+            grid.Focus();
+            EditFirstCell(lastIndex);
+            return;
+        }
+
+        grid.Focus();
+        AddItem();
+    }
+
+    private void AddItem()
     {
         var newItem = new RoomListItem { Id = Guid.NewGuid(), SortOrder = _items!.Count };
         _items.Add(newItem);
         AddGridRow(newItem);
         _onAnswerChanged?.Invoke();
+        EditFirstCell(grid.Rows.Count - 1);
+    }
 
-        var newRowIndex = grid.Rows.Count - 1;
-        if (grid.Columns.Count > 0 && newRowIndex >= 0)
+    private void EditFirstCell(int rowIndex)
+    {
+        if (grid.Columns.Count > 0 && rowIndex >= 0)
         {
-            grid.CurrentCell = grid.Rows[newRowIndex].Cells[0];
+            grid.CurrentCell = grid.Rows[rowIndex].Cells[0];
             grid.BeginEdit(true);
         }
     }
