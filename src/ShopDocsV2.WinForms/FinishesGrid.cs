@@ -182,7 +182,7 @@ public partial class FinishesGrid : UserControl
 
         if (!string.IsNullOrEmpty(textToCopy))
         {
-            Clipboard.SetText(textToCopy);
+            ClipboardText.TrySet(FindForm(), textToCopy);
         }
     }
 }

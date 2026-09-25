@@ -475,8 +475,8 @@ public partial class ListFieldEditor : UserControl
 
         var rgb = ColorMath.ToRgbLabel(hex);
         var menu = new ContextMenuStrip();
-        menu.Items.Add($"Copy RGB ({rgb})", null, (_, _) => CopyToClipboard(rgb));
-        menu.Items.Add($"Copy Hex ({hex})", null, (_, _) => CopyToClipboard(hex));
+        menu.Items.Add($"Copy RGB ({rgb})", null, (_, _) => ClipboardText.TrySet(FindForm(), rgb));
+        menu.Items.Add($"Copy Hex ({hex})", null, (_, _) => ClipboardText.TrySet(FindForm(), hex));
         menu.Closed += (_, _) => BeginInvoke(menu.Dispose);
         menu.Show(Cursor.Position);
     }
@@ -486,18 +486,5 @@ public partial class ListFieldEditor : UserControl
     {
         var name = grid.Rows[rowIndex].Cells[sourceFieldId].Value as string;
         return string.IsNullOrEmpty(name) ? null : ColorMath.ParseHexInput(_catalog!.HexFor(name));
-    }
-
-    private void CopyToClipboard(string text)
-    {
-        try
-        {
-            Clipboard.SetText(text);
-        }
-        catch (System.Runtime.InteropServices.ExternalException)
-        {
-            MessageBox.Show(FindForm(), "The clipboard is in use by another program. Please try again.",
-                "Copy", MessageBoxButtons.OK, MessageBoxIcon.Information);
-        }
     }
 }

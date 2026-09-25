@@ -205,7 +205,10 @@ public partial class MainForm : Form
             return;
         }
 
-        Clipboard.SetText(_specFormattingService.BuildRoomText(room, _questionSet));
+        if (!ClipboardText.TrySet(this, _specFormattingService.BuildRoomText(room, _questionSet)))
+        {
+            return;
+        }
         SetStatus($"Copied \"{(string.IsNullOrWhiteSpace(room.Name) ? "room" : room.Name)}\" specs to clipboard");
     }
 
@@ -226,7 +229,16 @@ public partial class MainForm : Form
             return;
         }
 
-        File.WriteAllText(dialog.FileName, _specFormattingService.BuildJobText(_currentJob, _questionSet));
+        try
+        {
+            File.WriteAllText(dialog.FileName, _specFormattingService.BuildJobText(_currentJob, _questionSet));
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            MessageBox.Show(this, $"Could not save '{dialog.FileName}':\n{ex.Message}", "Export Text",
+                MessageBoxButtons.OK, MessageBoxIcon.Error);
+            return;
+        }
         SetStatus("Exported job as text");
     }
 

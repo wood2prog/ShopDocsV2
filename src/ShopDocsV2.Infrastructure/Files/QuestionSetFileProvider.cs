@@ -58,9 +58,15 @@ public sealed class QuestionSetFileProvider(string? settingsFilePath = null) : I
 
     private void RememberPath(string path)
     {
-        var dir = Path.GetDirectoryName(_settingsFilePath)!;
-        Directory.CreateDirectory(dir);
-        File.WriteAllText(_settingsFilePath, JsonSerializer.Serialize(new AppSettingsDto { QuestionsPath = path }));
+        try
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(_settingsFilePath)!);
+            File.WriteAllText(_settingsFilePath, JsonSerializer.Serialize(new AppSettingsDto { QuestionsPath = path }));
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            // The question set itself loaded fine; it just won't be remembered next time.
+        }
     }
 
     private static QuestionSet MapToDomain(QuestionSetDto dto) => new()
