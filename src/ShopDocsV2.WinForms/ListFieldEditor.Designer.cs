@@ -6,6 +6,7 @@ partial class ListFieldEditor
 
     private DataGridView grid = null!;
     private Button addButton = null!;
+    private Label emptyLabel = null!;
 
     protected override void Dispose(bool disposing)
     {
@@ -21,6 +22,7 @@ partial class ListFieldEditor
         components = new System.ComponentModel.Container();
         grid = new DataGridView();
         addButton = new Button();
+        emptyLabel = new Label();
 
         ((System.ComponentModel.ISupportInitialize)grid).BeginInit();
         SuspendLayout();
@@ -39,7 +41,14 @@ partial class ListFieldEditor
         addButton.AutoSize = true;
         addButton.TextAlign = ContentAlignment.MiddleLeft;
 
+        emptyLabel.Dock = DockStyle.Fill;
+        emptyLabel.Text = "None added yet.";
+        emptyLabel.ForeColor = SystemColors.GrayText;
+        emptyLabel.TextAlign = ContentAlignment.MiddleLeft;
+        emptyLabel.Visible = false;
+
         Controls.Add(grid);
+        Controls.Add(emptyLabel);
         Controls.Add(addButton);
         AutoScaleMode = AutoScaleMode.Dpi;
         Dock = DockStyle.Fill;

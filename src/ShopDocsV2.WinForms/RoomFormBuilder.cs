@@ -7,6 +7,8 @@ internal static class RoomFormBuilder
 {
     private const string SkipOptionText = "-- Skip --";
     private const int ListEditorHeight = 220;
+    /// <summary>Extra height a list's GroupBox needs around its editor (caption + padding).</summary>
+    private const int ListGroupBoxChrome = 30;
 
     public static Control Build(Room room, QuestionSet questionSet, CatalogSnapshot catalog, Action onAnswerChanged)
     {
@@ -39,8 +41,9 @@ internal static class RoomFormBuilder
 
             foreach (var listQuestion in listQuestions)
             {
-                sectionsPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, ListEditorHeight + 30));
-                var groupBox = BuildListGroupBox(room, listQuestion, catalog, onAnswerChanged);
+                var rowStyle = new RowStyle(SizeType.Absolute, ListEditorHeight + ListGroupBoxChrome);
+                sectionsPanel.RowStyles.Add(rowStyle);
+                var groupBox = BuildListGroupBox(room, listQuestion, catalog, onAnswerChanged, rowStyle);
                 groupBox.Dock = DockStyle.Top;
                 groupBox.Margin = new Padding(0, 0, 0, 8);
                 sectionsPanel.Controls.Add(groupBox, 0, row++);
@@ -62,18 +65,29 @@ internal static class RoomFormBuilder
         return scrollPanel;
     }
 
-    private static GroupBox BuildListGroupBox(Room room, QuestionDef question, CatalogSnapshot catalog, Action onAnswerChanged)
+    /// <summary>
+    /// A list's GroupBox is full height while it has lines and shrinks to just the placeholder and add button
+    /// while empty; rowStyle is its row in the sections panel, kept in step so the rows below move with it.
+    /// </summary>
+    private static GroupBox BuildListGroupBox(Room room, QuestionDef question, CatalogSnapshot catalog, Action onAnswerChanged, RowStyle rowStyle)
     {
-        var editor = new ListFieldEditor { Dock = DockStyle.Fill, Height = ListEditorHeight };
+        var editor = new ListFieldEditor { Dock = DockStyle.Fill };
         editor.Bind(room, question, catalog, onAnswerChanged);
 
         var groupBox = new GroupBox
         {
             Text = question.Label,
-            Height = ListEditorHeight + 30,
             Padding = new Padding(4, 20, 4, 4)
         };
         groupBox.Controls.Add(editor);
+
+        void FitToContent()
+        {
+            groupBox.Height = (editor.IsEmpty ? editor.EmptyStateHeight : ListEditorHeight) + ListGroupBoxChrome;
+            rowStyle.Height = groupBox.Height;
+        }
+        editor.EmptyChanged += (_, _) => FitToContent();
+        FitToContent();
         return groupBox;
     }
 
