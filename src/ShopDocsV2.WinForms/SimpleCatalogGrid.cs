@@ -9,6 +9,9 @@ public partial class SimpleCatalogGrid : UserControl
     private ICatalogRepository? _catalogRepository;
     private CatalogList _list;
 
+    /// <summary>The rows, for the Catalog Manager's search.</summary>
+    internal DataGridView Grid => grid;
+
     public SimpleCatalogGrid()
     {
         InitializeComponent();

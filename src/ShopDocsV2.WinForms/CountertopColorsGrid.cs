@@ -12,6 +12,9 @@ public partial class CountertopColorsGrid : UserControl
     private ICatalogRepository? _catalogRepository;
     private List<string> _materialOptions = [];
 
+    /// <summary>The rows, for the Catalog Manager's search.</summary>
+    internal DataGridView Grid => grid;
+
     public CountertopColorsGrid()
     {
         InitializeComponent();

@@ -4,6 +4,9 @@ partial class CatalogManagerForm
 {
     private System.ComponentModel.IContainer components = null;
 
+    private Panel searchPanel = null!;
+    private TextBox searchTextBox = null!;
+    private ListBox searchResultsListBox = null!;
     private TabControl tabControl = null!;
     private TabPage materialsTabPage = null!;
     private TabPage finishesTabPage = null!;
@@ -30,6 +33,9 @@ partial class CatalogManagerForm
     {
         components = new System.ComponentModel.Container();
 
+        searchPanel = new Panel();
+        searchTextBox = new TextBox();
+        searchResultsListBox = new ListBox();
         tabControl = new TabControl();
         materialsTabPage = new TabPage("Materials");
         finishesTabPage = new TabPage("Finishes");
@@ -61,7 +67,23 @@ partial class CatalogManagerForm
             hardwareColorsTabPage
         ]);
 
+        searchTextBox.Dock = DockStyle.Fill;
+        searchTextBox.PlaceholderText = "Search all catalog lists...";
+
+        searchPanel.Dock = DockStyle.Top;
+        searchPanel.Padding = new Padding(6);
+        searchPanel.Height = searchTextBox.PreferredHeight + searchPanel.Padding.Vertical;
+        searchPanel.Controls.Add(searchTextBox);
+
+        // Floats over the tabs just under the search box; positioned and shown by ShowSearchResults.
+        searchResultsListBox.Visible = false;
+        searchResultsListBox.TabStop = false;
+        searchResultsListBox.IntegralHeight = true;
+
         Controls.Add(tabControl);
+        Controls.Add(searchPanel);
+        Controls.Add(searchResultsListBox);
+        searchResultsListBox.BringToFront();
         AutoScaleMode = AutoScaleMode.Dpi;
         ClientSize = new Size(700, 500);
         MinimumSize = new Size(500, 350);

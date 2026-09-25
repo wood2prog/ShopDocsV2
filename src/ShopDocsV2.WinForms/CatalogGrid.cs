@@ -21,4 +21,12 @@ internal static class CatalogGrid
 
     public static bool ConfirmDelete(Control owner, string name) =>
         MessageBox.Show(owner.FindForm(), $"Delete \"{name}\"?", "Delete", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes;
+
+    /// <summary>Makes the row current and scrolls it near the top of the grid (its tab must already be showing).</summary>
+    public static void ShowRow(DataGridView grid, int rowIndex, string columnName)
+    {
+        grid.Focus();
+        grid.CurrentCell = grid.Rows[rowIndex].Cells[columnName];
+        grid.FirstDisplayedScrollingRowIndex = Math.Max(0, rowIndex - 2);
+    }
 }

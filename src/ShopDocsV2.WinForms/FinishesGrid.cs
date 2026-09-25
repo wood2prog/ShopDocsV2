@@ -12,6 +12,9 @@ public partial class FinishesGrid : UserControl
     private ICatalogRepository? _catalogRepository;
     private IPaintColorLookupService? _paintColorLookupService;
 
+    /// <summary>The rows, for the Catalog Manager's search.</summary>
+    internal DataGridView Grid => grid;
+
     public FinishesGrid()
     {
         InitializeComponent();
