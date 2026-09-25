@@ -72,8 +72,11 @@ public partial class ListFieldEditor : UserControl
     /// <summary>True when there are no lines, so only the placeholder and add button show.</summary>
     internal bool IsEmpty => grid.Rows.Count == 0;
 
-    /// <summary>The height that fits the placeholder and add button, for the host to use while IsEmpty.</summary>
-    internal int EmptyStateHeight => emptyLabel.PreferredHeight + addButton.GetPreferredSize(Size.Empty).Height + 8;
+    /// <summary>
+    /// The height that fits the placeholder and add button, for the host to use while IsEmpty. Uses the
+    /// controls' current (DPI-scaled) sizes, so it's only final once the editor is on a form.
+    /// </summary>
+    internal int EmptyStateHeight => emptyLabel.PreferredHeight + addButton.Height + Padding.Vertical;
 
     private void UpdateEmptyState()
     {

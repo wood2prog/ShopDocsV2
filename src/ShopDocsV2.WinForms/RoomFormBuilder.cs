@@ -7,8 +7,6 @@ internal static class RoomFormBuilder
 {
     private const string SkipOptionText = "-- Skip --";
     private const int ListEditorHeight = 220;
-    /// <summary>Extra height a list's GroupBox needs around its editor (caption + padding).</summary>
-    private const int ListGroupBoxChrome = 30;
 
     public static Control Build(Room room, QuestionSet questionSet, CatalogSnapshot catalog, Action onAnswerChanged)
     {
@@ -41,7 +39,7 @@ internal static class RoomFormBuilder
 
             foreach (var listQuestion in listQuestions)
             {
-                var rowStyle = new RowStyle(SizeType.Absolute, ListEditorHeight + ListGroupBoxChrome);
+                var rowStyle = new RowStyle(SizeType.Absolute, ListEditorHeight);
                 sectionsPanel.RowStyles.Add(rowStyle);
                 var groupBox = BuildListGroupBox(room, listQuestion, catalog, onAnswerChanged, rowStyle);
                 groupBox.Dock = DockStyle.Top;
@@ -81,12 +79,20 @@ internal static class RoomFormBuilder
         };
         groupBox.Controls.Add(editor);
 
+        // Measured from the live font, padding and button rather than fixed pixels, because they grow with
+        // display scaling; re-run on Layout since that scaling only happens once the group is on the form.
         void FitToContent()
         {
-            groupBox.Height = (editor.IsEmpty ? editor.EmptyStateHeight : ListEditorHeight) + ListGroupBoxChrome;
-            rowStyle.Height = groupBox.Height;
+            var chrome = groupBox.Font.Height + groupBox.Padding.Vertical;
+            var height = (editor.IsEmpty ? editor.EmptyStateHeight : ListEditorHeight) + chrome;
+            if (groupBox.Height != height)
+            {
+                groupBox.Height = height;
+                rowStyle.Height = height;
+            }
         }
         editor.EmptyChanged += (_, _) => FitToContent();
+        groupBox.Layout += (_, _) => FitToContent();
         FitToContent();
         return groupBox;
     }
