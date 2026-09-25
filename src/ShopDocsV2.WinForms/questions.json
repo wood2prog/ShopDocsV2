@@ -115,7 +115,7 @@
           "addLabel": "+ Add Accessory",
           "itemFields": [
             { "id": "accessory", "label": "Accessory", "type": "select", "catalogSource": "accessories", "catalogLink": true },
-            { "id": "quantity", "label": "Qty", "type": "number", "placeholder": "Qty" }
+            { "id": "description", "label": "Description", "placeholder": "e.g. Sink base, 18\" pullout" }
           ]
         }
       ]
