@@ -47,7 +47,15 @@ internal sealed class JobPrintDocument : PrintDocument
         var y = (float)e.MarginBounds.Top;
         foreach (var line in page)
         {
-            e.Graphics!.DrawString(line.Text, line.Font, Brushes.Black, e.MarginBounds.Left + line.IndentX, y);
+            if (line.IsSeparator)
+            {
+                var lineY = y + line.Height / 2;
+                e.Graphics!.DrawLine(Pens.Black, e.MarginBounds.Left, lineY, e.MarginBounds.Right, lineY);
+            }
+            else
+            {
+                e.Graphics!.DrawString(line.Text, line.Font, Brushes.Black, e.MarginBounds.Left + line.IndentX, y);
+            }
             y += line.Height;
         }
 
@@ -84,8 +92,15 @@ internal sealed class JobPrintDocument : PrintDocument
         }
         Add("", _normalFont, 0);
 
-        foreach (var (roomName, sections) in _spec.Rooms)
+        for (var roomIndex = 0; roomIndex < _spec.Rooms.Count; roomIndex++)
         {
+            var (roomName, sections) = _spec.Rooms[roomIndex];
+            if (roomIndex > 0)
+            {
+                var separatorHeight = measureGraphics.MeasureString(" ", _normalFont).Height;
+                lines.Add(new PrintLine("", _normalFont, 0, false, separatorHeight, IsSeparator: true));
+            }
+
             Add(roomName, _roomTitleFont, 0, keepWithNext: true);
 
             if (sections.Count == 0)
@@ -115,7 +130,10 @@ internal sealed class JobPrintDocument : PrintDocument
         return lines;
     }
 
-    /// <summary>Bin-packs lines into pages; a line marked KeepWithNext is pushed to the next page if it would otherwise land as the last line on this one.</summary>
+    /// <summary>
+    /// Bin-packs lines into pages; a line marked KeepWithNext is pushed to the next page if it would otherwise land as the last line on this one.
+    /// A room separator that doesn't fit is dropped rather than printed at the top of the next page, where the page break already separates the rooms.
+    /// </summary>
     private static List<List<PrintLine>> Paginate(List<PrintLine> lines, int pageHeight)
     {
         var pages = new List<List<PrintLine>>();
@@ -131,6 +149,11 @@ internal sealed class JobPrintDocument : PrintDocument
                 currentHeight + line.Height + lines[i + 1].Height > pageHeight)
             {
                 fits = false;
+            }
+
+            if (!fits && line.IsSeparator)
+            {
+                continue;
             }
 
             if (!fits && currentPage.Count > 0)
@@ -152,5 +175,5 @@ internal sealed class JobPrintDocument : PrintDocument
         return pages.Count > 0 ? pages : [[]];
     }
 
-    private readonly record struct PrintLine(string Text, Font Font, float IndentX, bool KeepWithNext, float Height);
+    private readonly record struct PrintLine(string Text, Font Font, float IndentX, bool KeepWithNext, float Height, bool IsSeparator = false);
 }
