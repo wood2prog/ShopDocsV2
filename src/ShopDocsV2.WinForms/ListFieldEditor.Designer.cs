@@ -37,6 +37,7 @@ partial class ListFieldEditor
         grid.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
         grid.SelectionMode = DataGridViewSelectionMode.CellSelect;
         grid.EditMode = DataGridViewEditMode.EditOnKeystrokeOrF2;
+        Theme.StyleGrid(grid);
 
         // Sized to its label (with some breathing room) instead of stretching across the group.
         addButton.Text = "+ Add";
@@ -45,6 +46,7 @@ partial class ListFieldEditor
         addButton.Padding = new Padding(10, 4, 10, 4);
         addButton.MinimumSize = new Size(110, 0);
         addButton.Margin = new Padding(0, 4, 0, 0);
+        Theme.StyleAccentButton(addButton);
 
         addButtonPanel.Dock = DockStyle.Bottom;
         addButtonPanel.AutoSize = true;

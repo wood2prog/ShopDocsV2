@@ -78,6 +78,7 @@ internal static class RoomFormBuilder
             Padding = new Padding(4, 20, 4, 4)
         };
         groupBox.Controls.Add(editor);
+        Theme.StyleGroupBox(groupBox, editor);
 
         // Measured from the live font, padding and button rather than fixed pixels, because they grow with
         // display scaling; re-run on Layout since that scaling only happens once the group is on the form.
@@ -123,6 +124,7 @@ internal static class RoomFormBuilder
             AutoSizeMode = AutoSizeMode.GrowAndShrink
         };
         groupBox.Controls.Add(table);
+        Theme.StyleGroupBox(groupBox, table);
         return groupBox;
     }
 

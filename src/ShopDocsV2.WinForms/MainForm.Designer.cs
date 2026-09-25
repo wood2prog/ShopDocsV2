@@ -203,6 +203,7 @@ partial class MainForm
         // menuStrip
         menuStrip.Items.AddRange([fileMenuItem, roomMenuItem, exportMenuItem, toolsMenuItem, aboutMenuItem]);
         menuStrip.ShowItemToolTips = true;
+        menuStrip.Renderer = Theme.BarRenderer;
         menuStrip.Dock = DockStyle.Top;
 
         // statusStrip
@@ -211,9 +212,11 @@ partial class MainForm
         statusLabel.TextAlign = ContentAlignment.MiddleLeft;
         statusStrip.Items.Add(statusLabel);
         statusStrip.Dock = DockStyle.Bottom;
+        statusStrip.Renderer = Theme.BarRenderer;
 
         // jobInfoPanel
         jobInfoPanel.Dock = DockStyle.Top;
+        jobInfoPanel.BackColor = Theme.Sand;
 
         // roomsTabControl
         roomsTabControl.Dock = DockStyle.Fill;
@@ -221,6 +224,7 @@ partial class MainForm
         // MainForm
         AutoScaleMode = AutoScaleMode.Dpi;
         ClientSize = new Size(900, 650);
+        BackColor = Theme.Parchment;
         Controls.Add(roomsTabControl);
         Controls.Add(jobInfoPanel);
         Controls.Add(statusStrip);
