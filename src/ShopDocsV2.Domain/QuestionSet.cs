@@ -11,7 +11,11 @@ public sealed class QuestionSection
     public List<QuestionDef> Questions { get; set; } = new();
 }
 
-public enum QuestionType { Text, Select, Checkbox, Number, Textarea, List }
+/// <summary>
+/// Dimension is free text limited to measurement characters (e.g. 30 1/2); anywhere that doesn't special-case it,
+/// it behaves exactly like Text, and it's stored and printed as text.
+/// </summary>
+public enum QuestionType { Text, Select, Checkbox, Number, Textarea, List, Dimension }
 
 public sealed class QuestionDef
 {

@@ -104,6 +104,7 @@ public sealed class QuestionSetFileProvider(string? settingsFilePath = null) : I
         "number" => QuestionType.Number,
         "textarea" => QuestionType.Textarea,
         "list" => QuestionType.List,
+        "dimension" => QuestionType.Dimension,
         _ => QuestionType.Text
     };
 

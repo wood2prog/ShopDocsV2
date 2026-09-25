@@ -226,16 +226,12 @@ public partial class ListFieldEditor : UserControl
         }
     }
 
-    private QuestionDef? CatalogFieldAt(int columnIndex)
-    {
-        if (columnIndex < 0)
-        {
-            return null;
-        }
+    /// <summary>The item field shown in this column, or null for the extra columns (swatch, links, remove).</summary>
+    private QuestionDef? FieldAt(int columnIndex) =>
+        columnIndex < 0 ? null : _question!.ItemFields?.FirstOrDefault(f => f.Id == grid.Columns[columnIndex].Name);
 
-        var field = _question!.ItemFields?.FirstOrDefault(f => f.Id == grid.Columns[columnIndex].Name);
-        return string.IsNullOrEmpty(field?.CatalogSource) ? null : field;
-    }
+    private QuestionDef? CatalogFieldAt(int columnIndex) =>
+        FieldAt(columnIndex) is { CatalogSource: { Length: > 0 } } field ? field : null;
 
     private void AddButton_Click(object? sender, EventArgs e)
     {
@@ -360,6 +356,17 @@ public partial class ListFieldEditor : UserControl
 
     private void Grid_EditingControlShowing(object? sender, DataGridViewEditingControlShowingEventArgs e)
     {
+        if (e.Control is TextBox textBox)
+        {
+            // The grid reuses one TextBox for every text column, so only dimension columns keep the filter.
+            DimensionInput.Detach(textBox);
+            if (FieldAt(grid.CurrentCell?.ColumnIndex ?? -1)?.Type == QuestionType.Dimension)
+            {
+                DimensionInput.Attach(textBox);
+            }
+            return;
+        }
+
         if (e.Control is not ComboBox comboBox)
         {
             return;

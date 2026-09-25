@@ -32,6 +32,7 @@ public class QuestionSetFileProviderTests : IDisposable
                     { "id": "notes_text", "label": "Notes", "type": "textarea" },
                     { "id": "soft_close", "label": "Soft-close", "type": "checkbox" },
                     { "id": "shelf_count", "label": "Shelf Count", "type": "number" },
+                    { "id": "cutout_width", "label": "Cutout W", "type": "dimension" },
                     { "id": "no_type_field", "label": "No Type" },
                     { "id": "cabinet_finishes", "label": "Cabinet Finishes", "type": "list", "addLabel": "+ Add",
                       "itemFields": [
@@ -48,7 +49,7 @@ public class QuestionSetFileProviderTests : IDisposable
 
         var section = Assert.Single(questionSet.Sections);
         Assert.Equal("Cabinets", section.Title);
-        Assert.Equal(6, section.Questions.Count);
+        Assert.Equal(7, section.Questions.Count);
 
         var byId = section.Questions.ToDictionary(q => q.Id);
         Assert.Equal(QuestionType.Select, byId["cabinet_style"].Type);
@@ -57,6 +58,7 @@ public class QuestionSetFileProviderTests : IDisposable
         Assert.Equal(QuestionType.Textarea, byId["notes_text"].Type);
         Assert.Equal(QuestionType.Checkbox, byId["soft_close"].Type);
         Assert.Equal(QuestionType.Number, byId["shelf_count"].Type);
+        Assert.Equal(QuestionType.Dimension, byId["cutout_width"].Type);
         Assert.Equal(QuestionType.Text, byId["no_type_field"].Type);
 
         var listQuestion = byId["cabinet_finishes"];

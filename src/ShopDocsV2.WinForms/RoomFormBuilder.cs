@@ -132,6 +132,7 @@ internal static class RoomFormBuilder
             QuestionType.Select when !string.IsNullOrEmpty(question.CatalogSource) => BuildCatalogSelect(room, question, catalog, onAnswerChanged),
             QuestionType.Select => BuildSelect(room, question, onAnswerChanged),
             QuestionType.Number => BuildTextBox(room, question, numericOnly: true, onAnswerChanged),
+            QuestionType.Dimension => BuildDimensionBox(room, question, onAnswerChanged),
             _ => BuildTextBox(room, question, numericOnly: false, onAnswerChanged)
         };
         input.Dock = DockStyle.Fill;
@@ -213,6 +214,13 @@ internal static class RoomFormBuilder
             onAnswerChanged();
         };
 
+        return textBox;
+    }
+
+    private static TextBox BuildDimensionBox(Room room, QuestionDef question, Action onAnswerChanged)
+    {
+        var textBox = BuildTextBox(room, question, numericOnly: false, onAnswerChanged);
+        DimensionInput.Attach(textBox);
         return textBox;
     }
 
