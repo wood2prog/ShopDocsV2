@@ -10,8 +10,8 @@ namespace ShopDocsV2.WinForms;
 /// free-typed values (options are per row, so CatalogFilterBy works); plain-select columns get a
 /// real constrained dropdown; a ColorPreview column is followed by a read-only swatch
 /// column showing the finish's color with its RGB value on top (click it to copy RGB or hex).
-/// A CatalogLink column shows a picked accessory as a link: clicking its text opens the accessory's web page,
-/// clicking the rest of the cell opens the option list as usual.
+/// A CatalogLink column gets a read-only Product Page column (after the item's fields) showing the picked accessory's
+/// "Name – Model#" as a link to its web page.
 /// </summary>
 public partial class ListFieldEditor : UserControl
 {
@@ -19,6 +19,7 @@ public partial class ListFieldEditor : UserControl
     private const string SpecsColumnName = "__specs";
     private const string SinkSearchColumnName = "__sink_search";
     private const string SwatchColumnPrefix = "__swatch_";
+    private const string ProductPageColumnPrefix = "__product_page_";
 
     private Room? _room;
     private QuestionDef? _question;
@@ -26,7 +27,6 @@ public partial class ListFieldEditor : UserControl
     private Action? _onAnswerChanged;
     private List<RoomListItem>? _items;
     private ComboBoxSubstringFilter? _catalogComboFilter;
-    private Font? _linkFont;
 
     /// <summary>Options for catalog-backed columns that don't depend on a CatalogFilterBy sibling, resolved once per Bind() rather than once per row.</summary>
     private readonly Dictionary<string, IReadOnlyList<string>> _unfilteredOptionsCache = new();
@@ -51,9 +51,6 @@ public partial class ListFieldEditor : UserControl
         grid.EditingControlShowing += Grid_EditingControlShowing;
         grid.CellFormatting += Grid_CellFormatting;
         grid.CellClick += Grid_CellClick;
-        grid.CellMouseMove += Grid_CellMouseMove;
-        grid.CellMouseLeave += (_, _) => grid.Cursor = Cursors.Default;
-        Disposed += (_, _) => _linkFont?.Dispose();
         grid.UserDeletingRow += (_, e) =>
         {
             if (e.Row?.Tag is RoomListItem item)
@@ -138,6 +135,19 @@ public partial class ListFieldEditor : UserControl
                     Tag = field.Id
                 });
             }
+        }
+
+        // Product Page links go after the item's own fields rather than beside the picker.
+        foreach (var field in (_question.ItemFields ?? []).Where(f => f.CatalogLink))
+        {
+            grid.Columns.Add(new DataGridViewLinkColumn
+            {
+                Name = ProductPageColumnPrefix + field.Id,
+                HeaderText = "Product Page",
+                ReadOnly = true,
+                TrackVisitedState = false,
+                SortMode = DataGridViewColumnSortMode.NotSortable
+            });
         }
 
         if (_question.Id == "appliance_package")
@@ -269,6 +279,12 @@ public partial class ListFieldEditor : UserControl
             return;
         }
 
+        if (ProductPageUrlAt(e.RowIndex, e.ColumnIndex) is { } url)
+        {
+            WebLink.Open(FindForm(), url);
+            return;
+        }
+
         if (columnName == SpecsColumnName && grid.Rows[e.RowIndex].Tag is RoomListItem item)
         {
             OpenSpecsSearch(item);
@@ -341,6 +357,11 @@ public partial class ListFieldEditor : UserControl
         if (itemField.ColorPreview)
         {
             grid.InvalidateCell(grid.Columns[SwatchColumnPrefix + itemField.Id]!.Index, e.RowIndex);
+        }
+
+        if (itemField.CatalogLink)
+        {
+            grid.InvalidateCell(grid.Columns[ProductPageColumnPrefix + itemField.Id]!.Index, e.RowIndex);
         }
 
         foreach (var dependent in _question.ItemFields!.Where(f => f.CatalogFilterBy == itemField.Id))
@@ -448,9 +469,17 @@ public partial class ListFieldEditor : UserControl
             return;
         }
 
-        if (FieldAt(e.ColumnIndex) is { CatalogLink: true })
+        if (ProductPageFieldIdAt(e.ColumnIndex) is { } linkFieldId)
         {
-            FormatLinkCell(e);
+            // Only accessories with a link in the catalog show here, so every visible entry can be clicked.
+            var cell = grid.Rows[e.RowIndex].Cells[e.ColumnIndex];
+            var url = ProductPageUrlAt(e.RowIndex, e.ColumnIndex);
+            e.Value = url is null ? "" : grid.Rows[e.RowIndex].Cells[linkFieldId].Value as string;
+            e.FormattingApplied = true;
+            if (cell.ToolTipText != (url ?? ""))
+            {
+                cell.ToolTipText = url ?? "";
+            }
             return;
         }
 
@@ -478,12 +507,6 @@ public partial class ListFieldEditor : UserControl
     {
         if (e.RowIndex < 0 || e.ColumnIndex < 0)
         {
-            return;
-        }
-
-        if (LinkUrlAt(e.RowIndex, e.ColumnIndex) is { } url && IsOverLinkText(e.RowIndex, e.ColumnIndex, grid.PointToClient(Cursor.Position)))
-        {
-            WebLink.Open(FindForm(), url);
             return;
         }
 
@@ -522,65 +545,21 @@ public partial class ListFieldEditor : UserControl
         return string.IsNullOrEmpty(name) ? null : ColorMath.ParseHexInput(_catalog!.HexFor(name));
     }
 
-    /// <summary>The web link for this cell's picked accessory, or null if it isn't a CatalogLink cell, isn't a known accessory, or has no link.</summary>
-    private string? LinkUrlAt(int rowIndex, int columnIndex)
+    /// <summary>The CatalogLink field a Product Page column belongs to, or null for any other column.</summary>
+    private string? ProductPageFieldIdAt(int columnIndex) =>
+        columnIndex >= 0 && grid.Columns[columnIndex].Name.StartsWith(ProductPageColumnPrefix, StringComparison.Ordinal)
+            ? grid.Columns[columnIndex].Name[ProductPageColumnPrefix.Length..]
+            : null;
+
+    /// <summary>The web link of the accessory picked in this Product Page cell's row, or null if it isn't one, nothing known is picked, or it has no link.</summary>
+    private string? ProductPageUrlAt(int rowIndex, int columnIndex)
     {
-        if (rowIndex < 0 || FieldAt(columnIndex) is not { CatalogLink: true } ||
-            grid.Rows[rowIndex].Cells[columnIndex].Value is not string { Length: > 0 } label)
+        if (rowIndex < 0 || ProductPageFieldIdAt(columnIndex) is not { } fieldId ||
+            grid.Rows[rowIndex].Cells[fieldId].Value is not string { Length: > 0 } label)
         {
             return null;
         }
 
         return _catalog!.UrlFor(label);
-    }
-
-    private void FormatLinkCell(DataGridViewCellFormattingEventArgs e)
-    {
-        var cell = grid.Rows[e.RowIndex].Cells[e.ColumnIndex];
-        var url = LinkUrlAt(e.RowIndex, e.ColumnIndex);
-        if (cell.ToolTipText != (url ?? ""))
-        {
-            cell.ToolTipText = url ?? "";
-        }
-
-        if (url is null)
-        {
-            return;
-        }
-
-        _linkFont ??= new Font(grid.Font, FontStyle.Underline);
-        e.CellStyle!.Font = _linkFont;
-        e.CellStyle.ForeColor = LinkColor;
-        e.CellStyle.SelectionForeColor = LinkColor;
-        e.CellStyle.SelectionBackColor = e.CellStyle.BackColor;
-    }
-
-    private static readonly Color LinkColor = Color.FromArgb(0, 102, 204);
-
-    /// <summary>Whether a grid-client point is over the link text itself (not the empty space or dropdown arrow after it).</summary>
-    private bool IsOverLinkText(int rowIndex, int columnIndex, Point gridPoint)
-    {
-        var cellBounds = grid.GetCellDisplayRectangle(columnIndex, rowIndex, cutOverflow: true);
-        if (!cellBounds.Contains(gridPoint) || grid.Rows[rowIndex].Cells[columnIndex].Value is not string text)
-        {
-            return false;
-        }
-
-        _linkFont ??= new Font(grid.Font, FontStyle.Underline);
-        var textWidth = TextRenderer.MeasureText(text, _linkFont).Width;
-        var textRight = Math.Min(cellBounds.Left + textWidth + 4, cellBounds.Right - SystemInformation.VerticalScrollBarWidth);
-        return gridPoint.X <= textRight;
-    }
-
-    private void Grid_CellMouseMove(object? sender, DataGridViewCellMouseEventArgs e)
-    {
-        var overLink = LinkUrlAt(e.RowIndex, e.ColumnIndex) is not null &&
-            !(grid.IsCurrentCellInEditMode && grid.CurrentCell?.RowIndex == e.RowIndex && grid.CurrentCell.ColumnIndex == e.ColumnIndex) &&
-            IsOverLinkText(e.RowIndex, e.ColumnIndex, grid.PointToClient(Cursor.Position));
-        var cursor = overLink ? Cursors.Hand : Cursors.Default;
-        if (grid.Cursor != cursor)
-        {
-            grid.Cursor = cursor;
-        }
     }
 }

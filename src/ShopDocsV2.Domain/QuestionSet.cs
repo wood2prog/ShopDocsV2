@@ -35,8 +35,8 @@ public sealed class QuestionDef
     public bool ColorPreview { get; set; }
 
     /// <summary>
-    /// Only used on a List's ItemFields backed by the accessories catalog: a picked value is shown as a link
-    /// that opens the accessory's web page.
+    /// Only used on a List's ItemFields backed by the accessories catalog: adds a read-only Product Page column
+    /// after the item's fields, showing the picked accessory as a link that opens its web page.
     /// </summary>
     public bool CatalogLink { get; set; }
     public string? Placeholder { get; set; }
