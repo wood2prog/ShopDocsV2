@@ -8,7 +8,7 @@ namespace ShopDocsV2.Infrastructure.Sqlite;
 
 public sealed class JobRepository(SqliteConnectionFactory connectionFactory) : IJobRepository
 {
-    public async Task<Guid> CreateJobAsync(Job job, CancellationToken ct = default)
+    public async Task<Guid> CreateJobAsync(Job job)
     {
         if (job.Id == Guid.Empty)
         {
@@ -26,7 +26,7 @@ public sealed class JobRepository(SqliteConnectionFactory connectionFactory) : I
         return job.Id;
     }
 
-    public async Task<Job?> GetJobAsync(Guid id, CancellationToken ct = default)
+    public async Task<Job?> GetJobAsync(Guid id)
     {
         using var connection = connectionFactory.Create();
 
@@ -96,7 +96,7 @@ public sealed class JobRepository(SqliteConnectionFactory connectionFactory) : I
         return job;
     }
 
-    public async Task SaveJobAsync(Job job, CancellationToken ct = default)
+    public async Task SaveJobAsync(Job job)
     {
         job.UpdatedAt = DateTime.Now;
 
@@ -117,13 +117,13 @@ public sealed class JobRepository(SqliteConnectionFactory connectionFactory) : I
         transaction.Commit();
     }
 
-    public async Task DeleteJobAsync(Guid id, CancellationToken ct = default)
+    public async Task DeleteJobAsync(Guid id)
     {
         using var connection = connectionFactory.Create();
         await connection.ExecuteAsync("DELETE FROM jobs WHERE id = @id", new { id = id.ToString() });
     }
 
-    public async Task<IReadOnlyList<JobSummary>> ListJobsAsync(CancellationToken ct = default)
+    public async Task<IReadOnlyList<JobSummary>> ListJobsAsync()
     {
         using var connection = connectionFactory.Create();
         var rows = await connection.QueryAsync<JobRow>(
@@ -133,9 +133,9 @@ public sealed class JobRepository(SqliteConnectionFactory connectionFactory) : I
             .ToList();
     }
 
-    public async Task<Guid> DuplicateJobAsync(Guid sourceJobId, CancellationToken ct = default)
+    public async Task<Guid> DuplicateJobAsync(Guid sourceJobId)
     {
-        var source = await GetJobAsync(sourceJobId, ct)
+        var source = await GetJobAsync(sourceJobId)
             ?? throw new InvalidOperationException($"Job {sourceJobId} not found.");
 
         var clone = source.Duplicate(DateTime.Now);

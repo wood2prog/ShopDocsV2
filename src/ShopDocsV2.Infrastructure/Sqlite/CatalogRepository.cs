@@ -7,14 +7,14 @@ namespace ShopDocsV2.Infrastructure.Sqlite;
 
 public sealed class CatalogRepository(SqliteConnectionFactory connectionFactory) : ICatalogRepository
 {
-    public async Task<List<CatalogItem>> GetItemsAsync(CatalogList list, CancellationToken ct = default)
+    public async Task<List<CatalogItem>> GetItemsAsync(CatalogList list)
     {
         using var connection = connectionFactory.Create();
         var rows = await connection.QueryAsync<NamedRow>($"SELECT id, name, sort_order FROM {TableFor(list)} ORDER BY sort_order, name");
         return rows.Select(r => new CatalogItem { Id = r.id, Name = r.name, SortOrder = r.sort_order }).ToList();
     }
 
-    public async Task<int> AddItemAsync(CatalogList list, string name, CancellationToken ct = default)
+    public async Task<int> AddItemAsync(CatalogList list, string name)
     {
         var table = TableFor(list);
         using var connection = connectionFactory.Create();
@@ -23,13 +23,13 @@ public sealed class CatalogRepository(SqliteConnectionFactory connectionFactory)
         return await connection.ExecuteScalarAsync<int>("SELECT last_insert_rowid()");
     }
 
-    public async Task UpdateItemAsync(CatalogList list, int id, string name, CancellationToken ct = default)
+    public async Task UpdateItemAsync(CatalogList list, int id, string name)
     {
         using var connection = connectionFactory.Create();
         await connection.ExecuteAsync($"UPDATE {TableFor(list)} SET name = @name WHERE id = @id", new { id, name });
     }
 
-    public Task DeleteItemAsync(CatalogList list, int id, CancellationToken ct = default) => DeleteByIdAsync(TableFor(list), id);
+    public Task DeleteItemAsync(CatalogList list, int id) => DeleteByIdAsync(TableFor(list), id);
 
     /// <summary>Maps a CatalogList to its table. Also keeps table names out of caller-supplied strings, since they're interpolated into SQL.</summary>
     internal static string TableFor(CatalogList list) => list switch
@@ -42,7 +42,7 @@ public sealed class CatalogRepository(SqliteConnectionFactory connectionFactory)
         _ => throw new ArgumentOutOfRangeException(nameof(list), list, null)
     };
 
-    public async Task<List<CatalogFinish>> GetFinishesAsync(CancellationToken ct = default)
+    public async Task<List<CatalogFinish>> GetFinishesAsync()
     {
         using var connection = connectionFactory.Create();
         var rows = await connection.QueryAsync<FinishRow>(
@@ -50,7 +50,7 @@ public sealed class CatalogRepository(SqliteConnectionFactory connectionFactory)
         return rows.Select(r => new CatalogFinish { Id = r.id, Name = r.name, HexColor = r.hex_color, SortOrder = r.sort_order }).ToList();
     }
 
-    public async Task<int> AddFinishAsync(string name, string? hexColor, CancellationToken ct = default)
+    public async Task<int> AddFinishAsync(string name, string? hexColor)
     {
         using var connection = connectionFactory.Create();
         var sortOrder = await NextSortOrderAsync(connection, "catalog_finishes");
@@ -60,7 +60,7 @@ public sealed class CatalogRepository(SqliteConnectionFactory connectionFactory)
         return await connection.ExecuteScalarAsync<int>("SELECT last_insert_rowid()");
     }
 
-    public async Task UpdateFinishAsync(int id, string name, string? hexColor, CancellationToken ct = default)
+    public async Task UpdateFinishAsync(int id, string name, string? hexColor)
     {
         using var connection = connectionFactory.Create();
         await connection.ExecuteAsync(
@@ -68,9 +68,9 @@ public sealed class CatalogRepository(SqliteConnectionFactory connectionFactory)
             new { id, name, hexColor });
     }
 
-    public Task DeleteFinishAsync(int id, CancellationToken ct = default) => DeleteByIdAsync("catalog_finishes", id);
+    public Task DeleteFinishAsync(int id) => DeleteByIdAsync("catalog_finishes", id);
 
-    public async Task<List<CatalogCountertopColor>> GetCountertopColorsAsync(string? materialName = null, CancellationToken ct = default)
+    public async Task<List<CatalogCountertopColor>> GetCountertopColorsAsync(string? materialName = null)
     {
         using var connection = connectionFactory.Create();
         var sql = "SELECT id, material_name, color_name, sort_order FROM catalog_countertop_colors";
@@ -90,7 +90,7 @@ public sealed class CatalogRepository(SqliteConnectionFactory connectionFactory)
         }).ToList();
     }
 
-    public async Task<int> AddCountertopColorAsync(string materialName, string colorName, CancellationToken ct = default)
+    public async Task<int> AddCountertopColorAsync(string materialName, string colorName)
     {
         using var connection = connectionFactory.Create();
         var sortOrder = 1 + await connection.ExecuteScalarAsync<int>(
@@ -102,7 +102,7 @@ public sealed class CatalogRepository(SqliteConnectionFactory connectionFactory)
         return await connection.ExecuteScalarAsync<int>("SELECT last_insert_rowid()");
     }
 
-    public async Task UpdateCountertopColorAsync(int id, string materialName, string colorName, CancellationToken ct = default)
+    public async Task UpdateCountertopColorAsync(int id, string materialName, string colorName)
     {
         using var connection = connectionFactory.Create();
         await connection.ExecuteAsync(
@@ -110,7 +110,7 @@ public sealed class CatalogRepository(SqliteConnectionFactory connectionFactory)
             new { id, materialName, colorName });
     }
 
-    public Task DeleteCountertopColorAsync(int id, CancellationToken ct = default) => DeleteByIdAsync("catalog_countertop_colors", id);
+    public Task DeleteCountertopColorAsync(int id) => DeleteByIdAsync("catalog_countertop_colors", id);
 
     private async Task DeleteByIdAsync(string table, int id)
     {

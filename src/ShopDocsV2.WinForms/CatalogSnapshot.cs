@@ -13,19 +13,19 @@ internal sealed class CatalogSnapshot
     public List<CatalogFinish> Finishes { get; init; } = [];
     public List<CatalogCountertopColor> CountertopColors { get; init; } = [];
 
-    public static async Task<CatalogSnapshot> LoadAsync(ICatalogRepository repository, CancellationToken ct = default)
+    public static async Task<CatalogSnapshot> LoadAsync(ICatalogRepository repository)
     {
         var lists = new Dictionary<CatalogList, List<CatalogItem>>();
         foreach (var list in Enum.GetValues<CatalogList>())
         {
-            lists[list] = await repository.GetItemsAsync(list, ct);
+            lists[list] = await repository.GetItemsAsync(list);
         }
 
         return new CatalogSnapshot
         {
             Lists = lists,
-            Finishes = await repository.GetFinishesAsync(ct),
-            CountertopColors = await repository.GetCountertopColorsAsync(ct: ct)
+            Finishes = await repository.GetFinishesAsync(),
+            CountertopColors = await repository.GetCountertopColorsAsync()
         };
     }
 
