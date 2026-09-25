@@ -27,6 +27,9 @@ public sealed class CatalogAccessory
     public string? ModelNumber { get; set; }
     public string? Url { get; set; }
     public int SortOrder { get; set; }
+
+    /// <summary>How a room refers to this accessory, e.g. "Lazy Susan – LD-4NB-001-24" (just the name if there's no model number). Room answers store this text.</summary>
+    public string Label => string.IsNullOrWhiteSpace(ModelNumber) ? Name : $"{Name} – {ModelNumber}";
 }
 
 /// <summary>

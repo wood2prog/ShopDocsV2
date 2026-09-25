@@ -89,6 +89,7 @@ public sealed class QuestionSetFileProvider(string? settingsFilePath = null) : I
         CatalogSource = dto.CatalogSource,
         CatalogFilterBy = dto.CatalogFilterBy,
         ColorPreview = dto.ColorPreview,
+        CatalogLink = dto.CatalogLink,
         Placeholder = dto.Placeholder,
         AddLabel = dto.AddLabel,
         ItemFields = dto.ItemFields?.Select(MapQuestion).ToList(),
@@ -135,6 +136,7 @@ public sealed class QuestionSetFileProvider(string? settingsFilePath = null) : I
         public string? CatalogSource { get; set; }
         public string? CatalogFilterBy { get; set; }
         public bool ColorPreview { get; set; }
+        public bool CatalogLink { get; set; }
         public string? Placeholder { get; set; }
         public string? AddLabel { get; set; }
         public List<QuestionDefDto>? ItemFields { get; set; }

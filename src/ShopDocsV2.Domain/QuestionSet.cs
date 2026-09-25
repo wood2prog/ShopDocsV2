@@ -26,13 +26,19 @@ public sealed class QuestionDef
     public string? Default { get; set; }
     public ShowIfCondition? ShowIf { get; set; }
 
-    /// <summary>Name of a catalog list to source dropdown options from: materials/finishes/countertops/pulls/hardware_colors.</summary>
+    /// <summary>Name of a catalog list to source dropdown options from: materials/finishes/countertops/pulls/hardware_colors/accessories.</summary>
     public string? CatalogSource { get; set; }
 
     /// <summary>Id of a sibling field whose value narrows CatalogSource (only countertops.color -&gt; material today).</summary>
     public string? CatalogFilterBy { get; set; }
 
     public bool ColorPreview { get; set; }
+
+    /// <summary>
+    /// Only used on a List's ItemFields backed by the accessories catalog: a picked value is shown as a link
+    /// that opens the accessory's web page.
+    /// </summary>
+    public bool CatalogLink { get; set; }
     public string? Placeholder { get; set; }
 
     /// <summary>Only used when Type == List.</summary>

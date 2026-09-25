@@ -10,6 +10,8 @@ namespace ShopDocsV2.WinForms;
 /// free-typed values (options are per row, so CatalogFilterBy works); plain-select columns get a
 /// real constrained dropdown; a ColorPreview column is followed by a read-only swatch
 /// column showing the finish's color with its RGB value on top (click it to copy RGB or hex).
+/// A CatalogLink column shows a picked accessory as a link: clicking its text opens the accessory's web page,
+/// clicking the rest of the cell opens the option list as usual.
 /// </summary>
 public partial class ListFieldEditor : UserControl
 {
@@ -24,6 +26,7 @@ public partial class ListFieldEditor : UserControl
     private Action? _onAnswerChanged;
     private List<RoomListItem>? _items;
     private ComboBoxSubstringFilter? _catalogComboFilter;
+    private Font? _linkFont;
 
     /// <summary>Options for catalog-backed columns that don't depend on a CatalogFilterBy sibling, resolved once per Bind() rather than once per row.</summary>
     private readonly Dictionary<string, IReadOnlyList<string>> _unfilteredOptionsCache = new();
@@ -48,6 +51,9 @@ public partial class ListFieldEditor : UserControl
         grid.EditingControlShowing += Grid_EditingControlShowing;
         grid.CellFormatting += Grid_CellFormatting;
         grid.CellClick += Grid_CellClick;
+        grid.CellMouseMove += Grid_CellMouseMove;
+        grid.CellMouseLeave += (_, _) => grid.Cursor = Cursors.Default;
+        Disposed += (_, _) => _linkFont?.Dispose();
         grid.UserDeletingRow += (_, e) =>
         {
             if (e.Row?.Tag is RoomListItem item)
@@ -437,7 +443,18 @@ public partial class ListFieldEditor : UserControl
 
     private void Grid_CellFormatting(object? sender, DataGridViewCellFormattingEventArgs e)
     {
-        if (e.RowIndex < 0 || e.ColumnIndex < 0 || grid.Columns[e.ColumnIndex].Tag is not string sourceFieldId)
+        if (e.RowIndex < 0 || e.ColumnIndex < 0)
+        {
+            return;
+        }
+
+        if (FieldAt(e.ColumnIndex) is { CatalogLink: true })
+        {
+            FormatLinkCell(e);
+            return;
+        }
+
+        if (grid.Columns[e.ColumnIndex].Tag is not string sourceFieldId)
         {
             return;
         }
@@ -461,6 +478,12 @@ public partial class ListFieldEditor : UserControl
     {
         if (e.RowIndex < 0 || e.ColumnIndex < 0)
         {
+            return;
+        }
+
+        if (LinkUrlAt(e.RowIndex, e.ColumnIndex) is { } url && IsOverLinkText(e.RowIndex, e.ColumnIndex, grid.PointToClient(Cursor.Position)))
+        {
+            WebLink.Open(FindForm(), url);
             return;
         }
 
@@ -497,5 +520,67 @@ public partial class ListFieldEditor : UserControl
     {
         var name = grid.Rows[rowIndex].Cells[sourceFieldId].Value as string;
         return string.IsNullOrEmpty(name) ? null : ColorMath.ParseHexInput(_catalog!.HexFor(name));
+    }
+
+    /// <summary>The web link for this cell's picked accessory, or null if it isn't a CatalogLink cell, isn't a known accessory, or has no link.</summary>
+    private string? LinkUrlAt(int rowIndex, int columnIndex)
+    {
+        if (rowIndex < 0 || FieldAt(columnIndex) is not { CatalogLink: true } ||
+            grid.Rows[rowIndex].Cells[columnIndex].Value is not string { Length: > 0 } label)
+        {
+            return null;
+        }
+
+        return _catalog!.UrlFor(label);
+    }
+
+    private void FormatLinkCell(DataGridViewCellFormattingEventArgs e)
+    {
+        var cell = grid.Rows[e.RowIndex].Cells[e.ColumnIndex];
+        var url = LinkUrlAt(e.RowIndex, e.ColumnIndex);
+        if (cell.ToolTipText != (url ?? ""))
+        {
+            cell.ToolTipText = url ?? "";
+        }
+
+        if (url is null)
+        {
+            return;
+        }
+
+        _linkFont ??= new Font(grid.Font, FontStyle.Underline);
+        e.CellStyle!.Font = _linkFont;
+        e.CellStyle.ForeColor = LinkColor;
+        e.CellStyle.SelectionForeColor = LinkColor;
+        e.CellStyle.SelectionBackColor = e.CellStyle.BackColor;
+    }
+
+    private static readonly Color LinkColor = Color.FromArgb(0, 102, 204);
+
+    /// <summary>Whether a grid-client point is over the link text itself (not the empty space or dropdown arrow after it).</summary>
+    private bool IsOverLinkText(int rowIndex, int columnIndex, Point gridPoint)
+    {
+        var cellBounds = grid.GetCellDisplayRectangle(columnIndex, rowIndex, cutOverflow: true);
+        if (!cellBounds.Contains(gridPoint) || grid.Rows[rowIndex].Cells[columnIndex].Value is not string text)
+        {
+            return false;
+        }
+
+        _linkFont ??= new Font(grid.Font, FontStyle.Underline);
+        var textWidth = TextRenderer.MeasureText(text, _linkFont).Width;
+        var textRight = Math.Min(cellBounds.Left + textWidth + 4, cellBounds.Right - SystemInformation.VerticalScrollBarWidth);
+        return gridPoint.X <= textRight;
+    }
+
+    private void Grid_CellMouseMove(object? sender, DataGridViewCellMouseEventArgs e)
+    {
+        var overLink = LinkUrlAt(e.RowIndex, e.ColumnIndex) is not null &&
+            !(grid.IsCurrentCellInEditMode && grid.CurrentCell?.RowIndex == e.RowIndex && grid.CurrentCell.ColumnIndex == e.ColumnIndex) &&
+            IsOverLinkText(e.RowIndex, e.ColumnIndex, grid.PointToClient(Cursor.Position));
+        var cursor = overLink ? Cursors.Hand : Cursors.Default;
+        if (grid.Cursor != cursor)
+        {
+            grid.Cursor = cursor;
+        }
     }
 }

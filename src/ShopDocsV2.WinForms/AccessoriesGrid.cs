@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using ShopDocsV2.Application;
 
 namespace ShopDocsV2.WinForms;
@@ -120,33 +119,8 @@ public partial class AccessoriesGrid : UserControl
                 }
                 break;
             case OpenColumnName:
-                OpenLink(CellText(row, UrlColumnName));
+                WebLink.Open(FindForm(), CellText(row, UrlColumnName));
                 break;
         }
-    }
-
-    /// <summary>Opens a web address in the browser, adding https:// if it was pasted without one. Anything that isn't http(s) is refused, so a pasted file path can't launch a program.</summary>
-    private void OpenLink(string text)
-    {
-        if (text.Length == 0)
-        {
-            MessageBox.Show(FindForm(), "This accessory has no link yet. Paste one into its Link cell first.",
-                "Open Link", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            return;
-        }
-
-        if (!text.Contains("://"))
-        {
-            text = "https://" + text;
-        }
-
-        if (!Uri.TryCreate(text, UriKind.Absolute, out var uri) || (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps))
-        {
-            MessageBox.Show(FindForm(), $"\"{text}\" isn't a web address (it should start with http:// or https://).",
-                "Open Link", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            return;
-        }
-
-        Process.Start(new ProcessStartInfo(uri.AbsoluteUri) { UseShellExecute = true });
     }
 }

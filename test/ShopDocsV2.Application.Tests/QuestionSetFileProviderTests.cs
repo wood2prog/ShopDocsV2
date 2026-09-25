@@ -36,7 +36,7 @@ public class QuestionSetFileProviderTests : IDisposable
                     { "id": "no_type_field", "label": "No Type" },
                     { "id": "cabinet_finishes", "label": "Cabinet Finishes", "type": "list", "addLabel": "+ Add",
                       "itemFields": [
-                        { "id": "wood", "label": "Wood", "type": "select", "catalogSource": "materials", "printGroup": "Cutout", "printSuffix": "W" }
+                        { "id": "wood", "label": "Wood", "type": "select", "catalogSource": "materials", "printGroup": "Cutout", "printSuffix": "W", "catalogLink": true }
                       ]
                     }
                   ]
@@ -68,6 +68,8 @@ public class QuestionSetFileProviderTests : IDisposable
         Assert.Equal("materials", itemField.CatalogSource);
         Assert.Equal("Cutout", itemField.PrintGroup);
         Assert.Equal("W", itemField.PrintSuffix);
+        Assert.True(itemField.CatalogLink);
+        Assert.False(byId["cabinet_style"].CatalogLink);
     }
 
     [Fact]

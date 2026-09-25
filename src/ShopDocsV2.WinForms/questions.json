@@ -106,6 +106,22 @@
       ]
     },
     {
+      "title": "Accessories",
+      "questions": [
+        {
+          "id": "accessories",
+          "label": "Accessories",
+          "type": "list",
+          "addLabel": "+ Add Accessory",
+          "itemFields": [
+            { "id": "accessory", "label": "Accessory", "type": "select", "catalogSource": "accessories", "catalogLink": true },
+            { "id": "quantity", "label": "Qty", "type": "number", "placeholder": "Qty" },
+            { "id": "location", "label": "Location", "placeholder": "e.g. Sink base, Pantry" }
+          ]
+        }
+      ]
+    },
+    {
       "title": "Additional Notes",
       "questions": [
         {

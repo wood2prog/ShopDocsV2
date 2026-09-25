@@ -12,6 +12,7 @@ internal sealed class CatalogSnapshot
     public IReadOnlyDictionary<CatalogList, List<CatalogItem>> Lists { get; init; } = new Dictionary<CatalogList, List<CatalogItem>>();
     public List<CatalogFinish> Finishes { get; init; } = [];
     public List<CatalogCountertopColor> CountertopColors { get; init; } = [];
+    public List<CatalogAccessory> Accessories { get; init; } = [];
 
     public static async Task<CatalogSnapshot> LoadAsync(ICatalogRepository repository)
     {
@@ -25,7 +26,8 @@ internal sealed class CatalogSnapshot
         {
             Lists = lists,
             Finishes = await repository.GetFinishesAsync(),
-            CountertopColors = await repository.GetCountertopColorsAsync()
+            CountertopColors = await repository.GetCountertopColorsAsync(),
+            Accessories = await repository.GetAccessoriesAsync()
         };
     }
 
@@ -33,6 +35,7 @@ internal sealed class CatalogSnapshot
     public IReadOnlyList<string> Resolve(string? catalogSource, string? filterValue) => catalogSource switch
     {
         "finishes" => SortedNames(Finishes.Select(f => f.Name)),
+        "accessories" => SortedNames(Accessories.Select(a => a.Label).Distinct()),
         "countertops" => string.IsNullOrEmpty(filterValue)
             ? []
             : SortedNames(CountertopColors.Where(c => c.MaterialName == filterValue).Select(c => c.ColorName)),
@@ -51,6 +54,10 @@ internal sealed class CatalogSnapshot
     };
 
     public string? HexFor(string finishName) => Finishes.FirstOrDefault(f => f.Name == finishName)?.HexColor;
+
+    /// <summary>The web link of the accessory whose Label is accessoryLabel, or null if none/unknown.</summary>
+    public string? UrlFor(string accessoryLabel) =>
+        Accessories.FirstOrDefault(a => a.Label == accessoryLabel && !string.IsNullOrWhiteSpace(a.Url))?.Url;
 
     private static List<string> SortedNames(IEnumerable<string> names) =>
         names.OrderBy(n => n, StringComparer.OrdinalIgnoreCase).ToList();
