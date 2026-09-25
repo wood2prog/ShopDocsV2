@@ -22,7 +22,7 @@
     <UseWindowsForms>true</UseWindowsForms>
     <ApplicationIcon>AppIcon.ico</ApplicationIcon>
     <!-- Keep in sync with Version in installer/ShopDocsV2.Installer/Package.wxs. -->
-    <Version>1.1.0</Version>
+    <Version>1.2.0</Version>
     <Product>Shop Docs</Product>
     <Company>Jesse Ogburn</Company>
     <!-- Year is taken at compile time, so each build carries the current year. -->

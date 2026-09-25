@@ -91,7 +91,8 @@ partial class JobInfoPanel
             Text = labelText,
             AutoSize = false,
             TextAlign = ContentAlignment.MiddleLeft,
-            Dock = DockStyle.Fill
+            Dock = DockStyle.Fill,
+            ForeColor = Theme.Wood
         };
         if (control is TextBox textBox)
         {
@@ -120,6 +121,7 @@ partial class JobInfoPanel
             AccessibleName = $"Copy {labelText}",
             Tag = source
         };
+        Theme.StyleIconButton(button);
         copyToolTip.SetToolTip(button, $"Copy {labelText} to clipboard");
         button.Click += CopyButton_Click;
         return button;

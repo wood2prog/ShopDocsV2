@@ -39,8 +39,9 @@ internal static class RoomFormBuilder
 
             foreach (var listQuestion in listQuestions)
             {
-                sectionsPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, ListEditorHeight + 30));
-                var groupBox = BuildListGroupBox(room, listQuestion, catalog, onAnswerChanged);
+                var rowStyle = new RowStyle(SizeType.Absolute, ListEditorHeight);
+                sectionsPanel.RowStyles.Add(rowStyle);
+                var groupBox = BuildListGroupBox(room, listQuestion, catalog, onAnswerChanged, rowStyle);
                 groupBox.Dock = DockStyle.Top;
                 groupBox.Margin = new Padding(0, 0, 0, 8);
                 sectionsPanel.Controls.Add(groupBox, 0, row++);
@@ -62,18 +63,38 @@ internal static class RoomFormBuilder
         return scrollPanel;
     }
 
-    private static GroupBox BuildListGroupBox(Room room, QuestionDef question, CatalogSnapshot catalog, Action onAnswerChanged)
+    /// <summary>
+    /// A list's GroupBox is full height while it has lines and shrinks to just the placeholder and add button
+    /// while empty; rowStyle is its row in the sections panel, kept in step so the rows below move with it.
+    /// </summary>
+    private static GroupBox BuildListGroupBox(Room room, QuestionDef question, CatalogSnapshot catalog, Action onAnswerChanged, RowStyle rowStyle)
     {
-        var editor = new ListFieldEditor { Dock = DockStyle.Fill, Height = ListEditorHeight };
+        var editor = new ListFieldEditor { Dock = DockStyle.Fill };
         editor.Bind(room, question, catalog, onAnswerChanged);
 
         var groupBox = new GroupBox
         {
             Text = question.Label,
-            Height = ListEditorHeight + 30,
             Padding = new Padding(4, 20, 4, 4)
         };
         groupBox.Controls.Add(editor);
+        Theme.StyleGroupBox(groupBox, editor);
+
+        // Measured from the live font, padding and button rather than fixed pixels, because they grow with
+        // display scaling; re-run on Layout since that scaling only happens once the group is on the form.
+        void FitToContent()
+        {
+            var chrome = groupBox.Font.Height + groupBox.Padding.Vertical;
+            var height = (editor.IsEmpty ? editor.EmptyStateHeight : ListEditorHeight) + chrome;
+            if (groupBox.Height != height)
+            {
+                groupBox.Height = height;
+                rowStyle.Height = height;
+            }
+        }
+        editor.EmptyChanged += (_, _) => FitToContent();
+        groupBox.Layout += (_, _) => FitToContent();
+        FitToContent();
         return groupBox;
     }
 
@@ -103,6 +124,7 @@ internal static class RoomFormBuilder
             AutoSizeMode = AutoSizeMode.GrowAndShrink
         };
         groupBox.Controls.Add(table);
+        Theme.StyleGroupBox(groupBox, table);
         return groupBox;
     }
 

@@ -171,7 +171,7 @@ public partial class RoomsTabControl : UserControl
 
     private TabPage AddTabForRoom(Room room)
     {
-        var page = new TabPage(TabTitle(room));
+        var page = new TabPage(TabTitle(room)) { UseVisualStyleBackColor = false, BackColor = Theme.Parchment };
         _roomsByTab[page] = room;
         tabControl.TabPages.Add(page);
         return page;

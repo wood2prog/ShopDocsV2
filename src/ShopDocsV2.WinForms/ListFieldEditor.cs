@@ -12,6 +12,7 @@ namespace ShopDocsV2.WinForms;
 /// column showing the finish's color with its RGB value on top (click it to copy RGB or hex).
 /// A CatalogLink column gets a read-only Product Page column (after the item's fields) showing the picked accessory's
 /// "Name – Model#" as a link to its web page.
+/// With no lines, the grid is hidden and only a placeholder and the add button show (see EmptyChanged).
 /// </summary>
 public partial class ListFieldEditor : UserControl
 {
@@ -27,6 +28,7 @@ public partial class ListFieldEditor : UserControl
     private Action? _onAnswerChanged;
     private List<RoomListItem>? _items;
     private ComboBoxSubstringFilter? _catalogComboFilter;
+    private bool? _showingEmptyState;
 
     /// <summary>Options for catalog-backed columns that don't depend on a CatalogFilterBy sibling, resolved once per Bind() rather than once per row.</summary>
     private readonly Dictionary<string, IReadOnlyList<string>> _unfilteredOptionsCache = new();
@@ -59,7 +61,36 @@ public partial class ListFieldEditor : UserControl
             }
             _onAnswerChanged?.Invoke();
         };
+        grid.RowsAdded += (_, _) => UpdateEmptyState();
+        grid.RowsRemoved += (_, _) => UpdateEmptyState();
         addButton.Click += AddButton_Click;
+    }
+
+    /// <summary>Raised when the editor switches between showing its grid and the empty placeholder, so the host can resize it.</summary>
+    internal event EventHandler? EmptyChanged;
+
+    /// <summary>True when there are no lines, so only the placeholder and add button show.</summary>
+    internal bool IsEmpty => grid.Rows.Count == 0;
+
+    /// <summary>
+    /// The height that fits the placeholder and add button, for the host to use while IsEmpty. Uses the
+    /// controls' current (DPI-scaled) sizes, so it's only final once the editor is on a form.
+    /// </summary>
+    internal int EmptyStateHeight => emptyLabel.PreferredHeight + addButtonPanel.Height + Padding.Vertical;
+
+    private void UpdateEmptyState()
+    {
+        // Tracked separately: grid.Visible reads false whenever this editor's tab isn't the selected one.
+        var empty = IsEmpty;
+        if (_showingEmptyState == empty)
+        {
+            return;
+        }
+
+        _showingEmptyState = empty;
+        grid.Visible = !empty;
+        emptyLabel.Visible = empty;
+        EmptyChanged?.Invoke(this, EventArgs.Empty);
     }
 
     internal void Bind(Room room, QuestionDef question, CatalogSnapshot catalog, Action onAnswerChanged)
@@ -91,6 +122,7 @@ public partial class ListFieldEditor : UserControl
 
         BuildColumns();
         LoadRows();
+        UpdateEmptyState();
     }
 
     private void BuildColumns()
@@ -270,7 +302,6 @@ public partial class ListFieldEditor : UserControl
             return;
         }
 
-        grid.Focus();
         AddItem();
     }
 
@@ -280,6 +311,8 @@ public partial class ListFieldEditor : UserControl
         _items.Add(newItem);
         AddGridRow(newItem);
         _onAnswerChanged?.Invoke();
+        // Focus after the row is added: while the list was empty the grid was hidden and couldn't take focus.
+        grid.Focus();
         EditFirstCell(grid.Rows.Count - 1);
     }
 
