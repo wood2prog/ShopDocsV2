@@ -2,16 +2,16 @@
 
   <!--
     Per-user install: no admin/UAC prompt, installs to the current Windows
-    user's %LocalAppData%\Programs\ShopDocsV2. Matches where the app already
-    keeps its SQLite database and settings.json (see Infrastructure/Files
-    provider and SchemaInitializer).
+    user's %LocalAppData%\Programs\ShopDocsV2. User data (the SQLite database,
+    window.json and settings.json) lives separately in Documents\ShopDocsV2
+    (see Infrastructure/Files/AppDataPaths), so uninstalling never removes it.
 
     UpgradeCode must never change across releases - it's what lets a newer
     MSI recognize and replace an older install of this product.
   -->
   <Package Name="ShopDocsV2"
            Manufacturer="ShopDocsV2"
-           Version="1.0.27"
+           Version="1.0.28"
            UpgradeCode="60e15a1c-79fe-4b49-9d75-311903155792"
            Scope="perUser">
 

@@ -13,7 +13,7 @@ public class QuestionSetFileProviderTests : IDisposable
 
     public QuestionSetFileProviderTests()
     {
-        // Isolated from the real %LOCALAPPDATA%\ShopDocsV2\settings.json so this test never touches
+        // Isolated from the real Documents\ShopDocsV2\settings.json so this test never touches
         // (or overwrites) the developer's actual remembered questions.json path.
         _provider = new QuestionSetFileProvider(_settingsPath);
     }

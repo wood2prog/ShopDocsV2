@@ -11,8 +11,7 @@ public sealed class QuestionSetFileProvider(string? settingsFilePath = null) : I
 
     private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
 
-    private readonly string _settingsFilePath = settingsFilePath ?? Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "ShopDocsV2", "settings.json");
+    private readonly string _settingsFilePath = settingsFilePath ?? AppDataPaths.SettingsFilePath;
 
     public async Task<QuestionSet> LoadAsync(string? explicitPath = null, CancellationToken ct = default)
     {
