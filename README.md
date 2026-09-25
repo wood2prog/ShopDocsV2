@@ -7,7 +7,7 @@ A Windows Forms desktop app for a cabinet shop to capture per-room job specs —
 ## Features
 
 - **Schema-driven job forms.** Rooms are built dynamically from `questions.json`, so the shop's question set can be edited without touching code.
-- **Catalog-backed dropdowns.** Materials, finishes, countertop colors, pulls, hardware colors, hinges, and guides are managed in a SQLite-backed Catalog Manager and reused across every job.
+- **Catalog-backed dropdowns.** Materials, finishes, countertop colors, pulls, and hardware colors are managed in a SQLite-backed Catalog Manager and reused across every job.
 - **Autosave.** Edits are saved automatically (debounced) and flushed on close, so no explicit save step is required.
 - **Print, copy, and export.** Print a job spec, copy a single room's specs to the clipboard, export the full job as `.txt`, or export a `.ordx` XML file for the shop's CV cabinet-design software.
 

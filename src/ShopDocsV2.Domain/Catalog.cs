@@ -1,7 +1,7 @@
 namespace ShopDocsV2.Domain;
 
 /// <summary>The catalog lists that are just a name per row. Finishes and countertop colors carry extra columns, so they have their own types.</summary>
-public enum CatalogList { Materials, Pulls, HardwareColors, Hinges, Guides }
+public enum CatalogList { Materials, Pulls, HardwareColors }
 
 /// <summary>One row of a <see cref="CatalogList"/>.</summary>
 public sealed class CatalogItem

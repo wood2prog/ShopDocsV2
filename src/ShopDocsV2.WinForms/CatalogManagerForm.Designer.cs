@@ -10,16 +10,12 @@ partial class CatalogManagerForm
     private TabPage countertopColorsTabPage = null!;
     private TabPage pullsTabPage = null!;
     private TabPage hardwareColorsTabPage = null!;
-    private TabPage hingesTabPage = null!;
-    private TabPage guidesTabPage = null!;
 
     private SimpleCatalogGrid materialsGrid = null!;
     private FinishesGrid finishesGrid = null!;
     private CountertopColorsGrid countertopColorsGrid = null!;
     private SimpleCatalogGrid pullsGrid = null!;
     private SimpleCatalogGrid hardwareColorsGrid = null!;
-    private SimpleCatalogGrid hingesGrid = null!;
-    private SimpleCatalogGrid guidesGrid = null!;
 
     protected override void Dispose(bool disposing)
     {
@@ -40,16 +36,12 @@ partial class CatalogManagerForm
         countertopColorsTabPage = new TabPage("Countertop Colors");
         pullsTabPage = new TabPage("Pulls");
         hardwareColorsTabPage = new TabPage("Hardware Colors");
-        hingesTabPage = new TabPage("Hinges");
-        guidesTabPage = new TabPage("Guides");
 
         materialsGrid = new SimpleCatalogGrid();
         finishesGrid = new FinishesGrid();
         countertopColorsGrid = new CountertopColorsGrid();
         pullsGrid = new SimpleCatalogGrid();
         hardwareColorsGrid = new SimpleCatalogGrid();
-        hingesGrid = new SimpleCatalogGrid();
-        guidesGrid = new SimpleCatalogGrid();
 
         SuspendLayout();
 
@@ -58,8 +50,6 @@ partial class CatalogManagerForm
         countertopColorsTabPage.Controls.Add(countertopColorsGrid);
         pullsTabPage.Controls.Add(pullsGrid);
         hardwareColorsTabPage.Controls.Add(hardwareColorsGrid);
-        hingesTabPage.Controls.Add(hingesGrid);
-        guidesTabPage.Controls.Add(guidesGrid);
 
         tabControl.Dock = DockStyle.Fill;
         tabControl.TabPages.AddRange(
@@ -68,9 +58,7 @@ partial class CatalogManagerForm
             finishesTabPage,
             countertopColorsTabPage,
             pullsTabPage,
-            hardwareColorsTabPage,
-            hingesTabPage,
-            guidesTabPage
+            hardwareColorsTabPage
         ]);
 
         Controls.Add(tabControl);

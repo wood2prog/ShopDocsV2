@@ -24,8 +24,6 @@ public partial class CatalogManagerForm : Form
         await materialsGrid.BindAsync(_catalogRepository, CatalogList.Materials);
         await pullsGrid.BindAsync(_catalogRepository, CatalogList.Pulls);
         await hardwareColorsGrid.BindAsync(_catalogRepository, CatalogList.HardwareColors);
-        await hingesGrid.BindAsync(_catalogRepository, CatalogList.Hinges);
-        await guidesGrid.BindAsync(_catalogRepository, CatalogList.Guides);
         await finishesGrid.BindAsync(_catalogRepository, _paintColorLookupService);
         await countertopColorsGrid.BindAsync(_catalogRepository, _questionSet);
     }

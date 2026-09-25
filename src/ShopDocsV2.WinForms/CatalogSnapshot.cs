@@ -47,8 +47,6 @@ internal sealed class CatalogSnapshot
         "materials" => CatalogList.Materials,
         "pulls" => CatalogList.Pulls,
         "hardware_colors" => CatalogList.HardwareColors,
-        "hinges" => CatalogList.Hinges,
-        "guides" => CatalogList.Guides,
         _ => null
     };
 

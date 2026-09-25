@@ -23,8 +23,8 @@ public class SchemaInitializerTests : IDisposable
         Assert.Equal(
             new[]
             {
-                "catalog_countertop_colors", "catalog_finishes", "catalog_guides", "catalog_hardware_colors",
-                "catalog_hinges", "catalog_materials", "catalog_pulls", "jobs", "room_answers",
+                "catalog_countertop_colors", "catalog_finishes", "catalog_hardware_colors",
+                "catalog_materials", "catalog_pulls", "jobs", "room_answers",
                 "room_list_item_values", "room_list_items", "rooms", "schema_version"
             },
             tableNames);
@@ -33,8 +33,6 @@ public class SchemaInitializerTests : IDisposable
         Assert.Equal(263, connection.ExecuteScalar<int>("SELECT COUNT(*) FROM catalog_finishes"));
         Assert.Equal(1, connection.ExecuteScalar<int>("SELECT COUNT(*) FROM catalog_pulls"));
         Assert.Equal(6, connection.ExecuteScalar<int>("SELECT COUNT(*) FROM catalog_hardware_colors"));
-        Assert.Equal(1, connection.ExecuteScalar<int>("SELECT COUNT(*) FROM catalog_hinges"));
-        Assert.Equal(2, connection.ExecuteScalar<int>("SELECT COUNT(*) FROM catalog_guides"));
         Assert.Equal(40 + 14, connection.ExecuteScalar<int>("SELECT COUNT(*) FROM catalog_countertop_colors"));
         Assert.Equal(1, connection.ExecuteScalar<int>("SELECT COUNT(*) FROM schema_version"));
         Assert.Equal(1, connection.ExecuteScalar<int>("SELECT version FROM schema_version"));
@@ -55,6 +53,23 @@ public class SchemaInitializerTests : IDisposable
         using var connection = factory.Create();
         Assert.Equal(16, connection.ExecuteScalar<int>("SELECT COUNT(*) FROM catalog_materials"));
         Assert.Equal(1, connection.ExecuteScalar<int>("SELECT COUNT(*) FROM schema_version"));
+    }
+
+    [Fact]
+    public void Initialize_OlderDatabase_DropsRemovedHingesAndGuidesTables()
+    {
+        var factory = new SqliteConnectionFactory(_dbPath);
+        using (var connection = factory.Create())
+        {
+            connection.Execute("CREATE TABLE catalog_hinges (id INTEGER PRIMARY KEY, name TEXT, sort_order INTEGER)");
+            connection.Execute("CREATE TABLE catalog_guides (id INTEGER PRIMARY KEY, name TEXT, sort_order INTEGER)");
+        }
+
+        new SchemaInitializer(factory).Initialize();
+
+        using var check = factory.Create();
+        Assert.Equal(0, check.ExecuteScalar<int>(
+            "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name IN ('catalog_hinges', 'catalog_guides')"));
     }
 
     public void Dispose()

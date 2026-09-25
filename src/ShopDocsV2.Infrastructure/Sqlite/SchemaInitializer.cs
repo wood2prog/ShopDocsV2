@@ -40,8 +40,6 @@ public sealed class SchemaInitializer(SqliteConnectionFactory connectionFactory)
         InsertNamed(connection, transaction, "catalog_finishes", seed.Finishes);
         InsertNamed(connection, transaction, CatalogRepository.TableFor(CatalogList.Pulls), seed.Pulls);
         InsertNamed(connection, transaction, CatalogRepository.TableFor(CatalogList.HardwareColors), seed.HardwareColors);
-        InsertNamed(connection, transaction, CatalogRepository.TableFor(CatalogList.Hinges), seed.Hinges);
-        InsertNamed(connection, transaction, CatalogRepository.TableFor(CatalogList.Guides), seed.Guides);
 
         var sortOrder = 0;
         foreach (var (materialName, colorNames) in seed.Countertops)
@@ -94,11 +92,5 @@ public sealed class SchemaInitializer(SqliteConnectionFactory connectionFactory)
 
         [JsonPropertyName("hardware_colors")]
         public List<string> HardwareColors { get; set; } = new();
-
-        [JsonPropertyName("hinges")]
-        public List<string> Hinges { get; set; } = new();
-
-        [JsonPropertyName("guides")]
-        public List<string> Guides { get; set; } = new();
     }
 }
