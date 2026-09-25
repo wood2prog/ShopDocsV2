@@ -1,3 +1,5 @@
+using System.Runtime.InteropServices;
+
 namespace ShopDocsV2.WinForms;
 
 /// <summary>
@@ -52,10 +54,18 @@ internal sealed class ComboBoxSubstringFilter
         _refilling = true;
         try
         {
-            // Closing and reopening makes the list resize to the new item count.
-            _comboBox.DroppedDown = false;
+            var showList = matches.Count > 0 && text.Length > 0;
+            if (!showList)
+            {
+                _comboBox.DroppedDown = false;
+            }
             ReplaceItems(matches);
-            if (matches.Count > 0 && text.Length > 0)
+            if (showList && _comboBox.DroppedDown)
+            {
+                // Already open: refit it in place rather than closing and reopening, which flickers.
+                FitOpenListToItems();
+            }
+            else if (showList)
             {
                 _comboBox.DroppedDown = true;
                 // Opening the list hides the mouse pointer until it moves; show it again.
@@ -124,6 +134,27 @@ internal sealed class ComboBoxSubstringFilter
         }
     }
 
+    /// <summary>
+    /// Resizes the open list to show up to MaxDropDownItems rows of the current items. The native list only
+    /// sizes itself when it opens; if it opened above the box (near the screen bottom), its bottom edge stays put.
+    /// </summary>
+    private void FitOpenListToItems()
+    {
+        var info = new ComboBoxInfo { Size = Marshal.SizeOf<ComboBoxInfo>() };
+        if (!GetComboBoxInfo(_comboBox.Handle, ref info) || info.ListHandle == IntPtr.Zero ||
+            !GetWindowRect(info.ListHandle, out var listRect))
+        {
+            return;
+        }
+
+        const int border = 2;
+        var height = Math.Min(_comboBox.Items.Count, _comboBox.MaxDropDownItems) * _comboBox.ItemHeight + border;
+        var comboTop = _comboBox.PointToScreen(Point.Empty).Y;
+        var top = listRect.Top < comboTop ? listRect.Bottom - height : listRect.Top;
+        SetWindowPos(info.ListHandle, IntPtr.Zero, listRect.Left, top, listRect.Right - listRect.Left, height,
+            SwpNoZOrder | SwpNoActivate);
+    }
+
     private void RestoreText(string text, int caret)
     {
         _comboBox.SelectedIndex = -1;
@@ -131,4 +162,34 @@ internal sealed class ComboBoxSubstringFilter
         _comboBox.SelectionStart = Math.Min(caret, text.Length);
         _comboBox.SelectionLength = 0;
     }
+
+    private const uint SwpNoZOrder = 0x0004;
+    private const uint SwpNoActivate = 0x0010;
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct Rect
+    {
+        public int Left, Top, Right, Bottom;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct ComboBoxInfo
+    {
+        public int Size;
+        public Rect Item;
+        public Rect Button;
+        public int ButtonState;
+        public IntPtr ComboHandle;
+        public IntPtr EditHandle;
+        public IntPtr ListHandle;
+    }
+
+    [DllImport("user32.dll")]
+    private static extern bool GetComboBoxInfo(IntPtr hwndCombo, ref ComboBoxInfo info);
+
+    [DllImport("user32.dll")]
+    private static extern bool GetWindowRect(IntPtr hWnd, out Rect rect);
+
+    [DllImport("user32.dll")]
+    private static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int x, int y, int cx, int cy, uint flags);
 }
