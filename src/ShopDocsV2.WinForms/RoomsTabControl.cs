@@ -9,6 +9,9 @@ public partial class RoomsTabControl : UserControl
     private List<Room>? _rooms;
     private QuestionSet _questionSet = new();
     private CatalogSnapshot _catalog = new();
+    private TabPage? _dragPage;
+    private Point _dragStart;
+    private bool _dragMoved;
 
     public event EventHandler? RoomsChanged;
 
@@ -18,6 +21,9 @@ public partial class RoomsTabControl : UserControl
     {
         InitializeComponent();
         tabControl.MouseDoubleClick += TabControl_MouseDoubleClick;
+        tabControl.MouseDown += TabControl_MouseDown;
+        tabControl.MouseMove += TabControl_MouseMove;
+        tabControl.MouseUp += TabControl_MouseUp;
         tabControl.SelectedIndexChanged += (_, _) =>
         {
             if (tabControl.SelectedTab is { } page)
@@ -159,6 +165,85 @@ public partial class RoomsTabControl : UserControl
 
             RenameRoom(tabControl.TabPages[i]);
             return;
+        }
+    }
+
+    private int TabIndexAt(Point location)
+    {
+        for (var i = 0; i < tabControl.TabPages.Count; i++)
+        {
+            if (tabControl.GetTabRect(i).Contains(location))
+            {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    private void TabControl_MouseDown(object? sender, MouseEventArgs e)
+    {
+        if (e.Button != MouseButtons.Left)
+        {
+            return;
+        }
+
+        var index = TabIndexAt(e.Location);
+        _dragPage = index >= 0 ? tabControl.TabPages[index] : null;
+        _dragStart = e.Location;
+        _dragMoved = false;
+    }
+
+    private void TabControl_MouseMove(object? sender, MouseEventArgs e)
+    {
+        if (_dragPage is null || e.Button != MouseButtons.Left)
+        {
+            return;
+        }
+
+        // Ignore small jitters so plain clicks and double-click-to-rename aren't treated as drags.
+        if (!_dragMoved)
+        {
+            var dragSize = SystemInformation.DragSize;
+            if (Math.Abs(e.X - _dragStart.X) < dragSize.Width && Math.Abs(e.Y - _dragStart.Y) < dragSize.Height)
+            {
+                return;
+            }
+        }
+
+        var from = tabControl.TabPages.IndexOf(_dragPage);
+        var to = TabIndexAt(e.Location);
+        if (to < 0 || to == from)
+        {
+            return;
+        }
+
+        // Only move once the pointer would land inside the dragged tab's new slot; otherwise, with tabs of
+        // different widths, the swap puts the pointer back over the other tab and the two flip-flop.
+        var target = tabControl.GetTabRect(to);
+        var draggedWidth = tabControl.GetTabRect(from).Width;
+        if (to > from ? e.X < target.Right - draggedWidth : e.X > target.Left + draggedWidth)
+        {
+            return;
+        }
+
+        tabControl.SuspendLayout();
+        tabControl.TabPages.Remove(_dragPage);
+        tabControl.TabPages.Insert(to, _dragPage);
+        tabControl.SelectedTab = _dragPage;
+        tabControl.ResumeLayout();
+        _dragMoved = true;
+    }
+
+    private void TabControl_MouseUp(object? sender, MouseEventArgs e)
+    {
+        var moved = _dragMoved;
+        _dragPage = null;
+        _dragMoved = false;
+
+        if (moved)
+        {
+            RenumberSortOrders();
+            RoomsChanged?.Invoke(this, EventArgs.Empty);
         }
     }
 
