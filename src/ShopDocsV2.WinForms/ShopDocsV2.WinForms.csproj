@@ -19,12 +19,10 @@
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net10.0-windows</TargetFramework>
-    <Nullable>enable</Nullable>
     <UseWindowsForms>true</UseWindowsForms>
-    <ImplicitUsings>enable</ImplicitUsings>
     <ApplicationIcon>AppIcon.ico</ApplicationIcon>
     <!-- Keep in sync with Version in installer/ShopDocsV2.Installer/Package.wxs. -->
-    <Version>1.0.26</Version>
+    <Version>1.0.27</Version>
     <Product>Shop Docs</Product>
     <Company>Jesse Ogburn</Company>
     <!-- Year is taken at compile time, so each build carries the current year. -->

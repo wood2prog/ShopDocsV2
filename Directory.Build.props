@@ -1,0 +1,14 @@
+<Project>
+
+  <!--
+    Settings shared by every C# project in the repo. Scoped to .csproj so the WiX installer project, which
+    also picks this file up, isn't given a TargetFramework. A project can still override any of these
+    (the WinForms app targets net10.0-windows).
+  -->
+  <PropertyGroup Condition="'$(MSBuildProjectExtension)' == '.csproj'">
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>
