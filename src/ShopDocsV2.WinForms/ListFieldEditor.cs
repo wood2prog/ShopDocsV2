@@ -23,6 +23,7 @@ public partial class ListFieldEditor : UserControl
     private CatalogSnapshot? _catalog;
     private Action? _onAnswerChanged;
     private List<RoomListItem>? _items;
+    private ComboBoxSubstringFilter? _catalogComboFilter;
 
     /// <summary>Options for catalog-backed columns that don't depend on a CatalogFilterBy sibling, resolved once per Bind() rather than once per row.</summary>
     private readonly Dictionary<string, IReadOnlyList<string>> _unfilteredOptionsCache = new();
@@ -375,6 +376,8 @@ public partial class ListFieldEditor : UserControl
         // The grid reuses one editing control across cells and columns, so reset what we change here.
         comboBox.SelectionChangeCommitted -= CatalogComboBox_SelectionChangeCommitted;
         comboBox.TextUpdate -= CatalogComboBox_TextUpdate;
+        _catalogComboFilter?.Detach();
+        _catalogComboFilter = null;
 
         if (CatalogFieldAt(grid.CurrentCell?.ColumnIndex ?? -1) is null)
         {
@@ -384,9 +387,10 @@ public partial class ListFieldEditor : UserControl
         }
 
         // DropDown (not DropDownList) so values outside the catalog can still be typed.
+        // Typed text narrows the list to options containing it; the cell's Items hold this row's full list.
         comboBox.DropDownStyle = ComboBoxStyle.DropDown;
-        comboBox.AutoCompleteMode = AutoCompleteMode.SuggestAppend;
-        comboBox.AutoCompleteSource = AutoCompleteSource.ListItems;
+        _catalogComboFilter = ComboBoxSubstringFilter.Attach(comboBox, () =>
+            grid.CurrentCell is DataGridViewComboBoxCell cell ? cell.Items.Cast<object>().Select(o => o?.ToString() ?? "") : []);
         comboBox.SelectionChangeCommitted += CatalogComboBox_SelectionChangeCommitted;
         comboBox.TextUpdate += CatalogComboBox_TextUpdate;
     }
