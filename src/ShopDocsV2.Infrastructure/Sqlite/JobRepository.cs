@@ -138,42 +138,7 @@ public sealed class JobRepository(SqliteConnectionFactory connectionFactory) : I
         var source = await GetJobAsync(sourceJobId, ct)
             ?? throw new InvalidOperationException($"Job {sourceJobId} not found.");
 
-        var now = DateTime.Now;
-        var clone = new Job
-        {
-            Id = Guid.NewGuid(),
-            CustomerName = source.CustomerName,
-            CustomerPhone = source.CustomerPhone,
-            CustomerEmail = source.CustomerEmail,
-            Address = source.Address,
-            DateCreated = now,
-            DueDate = source.DueDate,
-            UpdatedAt = now
-        };
-
-        foreach (var room in source.Rooms)
-        {
-            var clonedRoom = new Room { Id = Guid.NewGuid(), Name = room.Name, SortOrder = room.SortOrder };
-            foreach (var (questionId, value) in room.Answers)
-            {
-                clonedRoom.Answers[questionId] = value;
-            }
-            foreach (var (questionId, items) in room.ListAnswers)
-            {
-                var clonedItems = new List<RoomListItem>();
-                foreach (var item in items)
-                {
-                    var clonedItem = new RoomListItem { Id = Guid.NewGuid(), SortOrder = item.SortOrder };
-                    foreach (var (fieldId, value) in item.Fields)
-                    {
-                        clonedItem.Fields[fieldId] = value;
-                    }
-                    clonedItems.Add(clonedItem);
-                }
-                clonedRoom.ListAnswers[questionId] = clonedItems;
-            }
-            clone.Rooms.Add(clonedRoom);
-        }
+        var clone = source.Duplicate(DateTime.Now);
 
         using var connection = connectionFactory.Create();
         using var transaction = connection.BeginTransaction();

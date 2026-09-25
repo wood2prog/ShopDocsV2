@@ -26,4 +26,21 @@ public sealed class Job
         !string.IsNullOrWhiteSpace(Address) ||
         DueDate is not null ||
         Rooms.Count > 0;
+
+    /// <summary>
+    /// A copy of this job's whole graph (customer fields, rooms, answers, list items) under new ids, created and
+    /// updated at <paramref name="now"/>. Used by Duplicate Job, which replaces the original app's file-based "Save As".
+    /// </summary>
+    public Job Duplicate(DateTime now) => new()
+    {
+        Id = Guid.NewGuid(),
+        CustomerName = CustomerName,
+        CustomerPhone = CustomerPhone,
+        CustomerEmail = CustomerEmail,
+        Address = Address,
+        DateCreated = now,
+        DueDate = DueDate,
+        UpdatedAt = now,
+        Rooms = Rooms.Select(r => r.Duplicate()).ToList()
+    };
 }

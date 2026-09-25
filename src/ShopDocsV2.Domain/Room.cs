@@ -11,6 +11,16 @@ public sealed class Room
 
     /// <summary>List-question item rows, keyed by the list QuestionDef.Id.</summary>
     public Dictionary<string, List<RoomListItem>> ListAnswers { get; set; } = new();
+
+    /// <summary>A copy of this room, its answers and its list items, under new ids.</summary>
+    public Room Duplicate() => new()
+    {
+        Id = Guid.NewGuid(),
+        Name = Name,
+        SortOrder = SortOrder,
+        Answers = new Dictionary<string, AnswerValue>(Answers),
+        ListAnswers = ListAnswers.ToDictionary(kv => kv.Key, kv => kv.Value.Select(i => i.Duplicate()).ToList())
+    };
 }
 
 public sealed class RoomListItem
@@ -20,6 +30,13 @@ public sealed class RoomListItem
 
     /// <summary>Field values for this item, keyed by itemField.Id.</summary>
     public Dictionary<string, AnswerValue> Fields { get; set; } = new();
+
+    public RoomListItem Duplicate() => new()
+    {
+        Id = Guid.NewGuid(),
+        SortOrder = SortOrder,
+        Fields = new Dictionary<string, AnswerValue>(Fields)
+    };
 }
 
 public enum AnswerValueKind { Text, Number, Bool }
