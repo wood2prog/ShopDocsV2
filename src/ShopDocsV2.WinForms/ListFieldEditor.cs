@@ -76,7 +76,7 @@ public partial class ListFieldEditor : UserControl
     /// The height that fits the placeholder and add button, for the host to use while IsEmpty. Uses the
     /// controls' current (DPI-scaled) sizes, so it's only final once the editor is on a form.
     /// </summary>
-    internal int EmptyStateHeight => emptyLabel.PreferredHeight + addButton.Height + Padding.Vertical;
+    internal int EmptyStateHeight => emptyLabel.PreferredHeight + addButtonPanel.Height + Padding.Vertical;
 
     private void UpdateEmptyState()
     {

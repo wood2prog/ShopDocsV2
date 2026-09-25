@@ -6,6 +6,7 @@ partial class ListFieldEditor
 
     private DataGridView grid = null!;
     private Button addButton = null!;
+    private FlowLayoutPanel addButtonPanel = null!;
     private Label emptyLabel = null!;
 
     protected override void Dispose(bool disposing)
@@ -22,6 +23,7 @@ partial class ListFieldEditor
         components = new System.ComponentModel.Container();
         grid = new DataGridView();
         addButton = new Button();
+        addButtonPanel = new FlowLayoutPanel();
         emptyLabel = new Label();
 
         ((System.ComponentModel.ISupportInitialize)grid).BeginInit();
@@ -36,10 +38,19 @@ partial class ListFieldEditor
         grid.SelectionMode = DataGridViewSelectionMode.CellSelect;
         grid.EditMode = DataGridViewEditMode.EditOnKeystrokeOrF2;
 
-        addButton.Dock = DockStyle.Bottom;
+        // Sized to its label (with some breathing room) instead of stretching across the group.
         addButton.Text = "+ Add";
         addButton.AutoSize = true;
-        addButton.TextAlign = ContentAlignment.MiddleLeft;
+        addButton.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+        addButton.Padding = new Padding(10, 4, 10, 4);
+        addButton.MinimumSize = new Size(110, 0);
+        addButton.Margin = new Padding(0, 4, 0, 0);
+
+        addButtonPanel.Dock = DockStyle.Bottom;
+        addButtonPanel.AutoSize = true;
+        addButtonPanel.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+        addButtonPanel.WrapContents = false;
+        addButtonPanel.Controls.Add(addButton);
 
         emptyLabel.Dock = DockStyle.Fill;
         emptyLabel.Text = "None added yet.";
@@ -49,7 +60,7 @@ partial class ListFieldEditor
 
         Controls.Add(grid);
         Controls.Add(emptyLabel);
-        Controls.Add(addButton);
+        Controls.Add(addButtonPanel);
         AutoScaleMode = AutoScaleMode.Dpi;
         Dock = DockStyle.Fill;
 
