@@ -172,7 +172,29 @@ public partial class MainForm : Form
 
         using var printDocument = BuildPrintDocument(_currentJob);
         using var previewDialog = new PrintPreviewDialog { Document = printDocument, Width = 900, Height = 700 };
+        AddPageSetupButton(previewDialog);
         previewDialog.ShowDialog(this);
+    }
+
+    /// <summary>Adds a Page Setup button to the preview's toolbar so orientation, paper and margins can be changed and re-previewed.</summary>
+    private static void AddPageSetupButton(PrintPreviewDialog previewDialog)
+    {
+        if (previewDialog.Controls.OfType<ToolStrip>().FirstOrDefault() is not { } toolStrip)
+        {
+            return;
+        }
+
+        var pageSetupButton = new ToolStripButton("Page Setup...") { DisplayStyle = ToolStripItemDisplayStyle.Text };
+        pageSetupButton.Click += (_, _) =>
+        {
+            using var pageSetupDialog = new PageSetupDialog { Document = previewDialog.Document, EnableMetric = true };
+            if (pageSetupDialog.ShowDialog(previewDialog) == DialogResult.OK)
+            {
+                previewDialog.PrintPreviewControl.InvalidatePreview();
+            }
+        };
+        toolStrip.Items.Add(new ToolStripSeparator());
+        toolStrip.Items.Add(pageSetupButton);
     }
 
     private void PrintMenuItem_Click(object? sender, EventArgs e)

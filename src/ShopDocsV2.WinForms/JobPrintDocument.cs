@@ -24,6 +24,8 @@ internal sealed class JobPrintDocument : PrintDocument
     {
         _spec = spec;
         DocumentName = documentName;
+        // Portrait regardless of the printer's own default; Page Setup in the preview can still switch it.
+        DefaultPageSettings.Landscape = false;
     }
 
     protected override void OnBeginPrint(PrintEventArgs e)
