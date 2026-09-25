@@ -21,17 +21,7 @@ internal static class AboutDialog
         var copyright = assembly.GetCustomAttribute<AssemblyCopyrightAttribute>()?.Copyright ?? "";
         var buildDate = BuildDate(assembly);
 
-        using var form = new Form
-        {
-            Text = "About Shop Docs",
-            StartPosition = FormStartPosition.CenterParent,
-            FormBorderStyle = FormBorderStyle.FixedDialog,
-            MinimizeBox = false,
-            MaximizeBox = false,
-            ShowInTaskbar = false,
-            ClientSize = new Size(420, 210),
-            AutoScaleMode = AutoScaleMode.Dpi
-        };
+        using var form = FixedDialog.Create("About Shop Docs", 420, 210);
 
         var iconBox = new PictureBox
         {

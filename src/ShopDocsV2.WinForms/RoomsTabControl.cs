@@ -6,7 +6,6 @@ public partial class RoomsTabControl : UserControl
 {
     private readonly Dictionary<TabPage, Room> _roomsByTab = new();
     private readonly HashSet<TabPage> _builtPages = new();
-    private readonly RoomFormBuilder _formBuilder = new();
     private List<Room>? _rooms;
     private QuestionSet _questionSet = new();
     private CatalogSnapshot _catalog = new();
@@ -28,20 +27,21 @@ public partial class RoomsTabControl : UserControl
         };
     }
 
-    /// <summary>Rebuilds any already-built tab content so it reflects the newly loaded schema (e.g. the initial async load completing after rooms were already shown).</summary>
+    /// <summary>Rebuilds tab content so it reflects the newly loaded schema (e.g. the initial async load completing after rooms were already shown).</summary>
     public void SetQuestionSet(QuestionSet questionSet)
     {
         _questionSet = questionSet;
-        RebuildVisibleTab();
+        ResetTabContent();
     }
 
     internal void SetCatalog(CatalogSnapshot catalog)
     {
         _catalog = catalog;
-        RebuildVisibleTab();
+        ResetTabContent();
     }
 
-    private void RebuildVisibleTab()
+    /// <summary>Discards every tab's built content, rebuilding the selected tab now; the others rebuild when next selected.</summary>
+    private void ResetTabContent()
     {
         foreach (TabPage page in tabControl.TabPages)
         {
@@ -132,7 +132,7 @@ public partial class RoomsTabControl : UserControl
         }
 
         page.SuspendLayout();
-        var content = _formBuilder.Build(room, _questionSet, _catalog, () => RoomsChanged?.Invoke(this, EventArgs.Empty));
+        var content = RoomFormBuilder.Build(room, _questionSet, _catalog, () => RoomsChanged?.Invoke(this, EventArgs.Empty));
         content.Dock = DockStyle.Fill;
         page.Controls.Add(content);
         page.ResumeLayout();

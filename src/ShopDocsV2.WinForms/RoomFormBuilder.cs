@@ -3,12 +3,12 @@ using ShopDocsV2.Domain;
 namespace ShopDocsV2.WinForms;
 
 /// <summary>Builds a room tab's dynamic contents from a QuestionSet + the loaded catalog data.</summary>
-internal sealed class RoomFormBuilder
+internal static class RoomFormBuilder
 {
     private const string SkipOptionText = "-- Skip --";
     private const int ListEditorHeight = 220;
 
-    public Control Build(Room room, QuestionSet questionSet, CatalogSnapshot catalog, Action onAnswerChanged)
+    public static Control Build(Room room, QuestionSet questionSet, CatalogSnapshot catalog, Action onAnswerChanged)
     {
         var scrollPanel = new Panel { Dock = DockStyle.Fill, AutoScroll = true };
 

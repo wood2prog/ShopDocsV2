@@ -5,17 +5,7 @@ internal static class PromptDialog
 {
     public static string? ShowInput(IWin32Window? owner, string title, string label, string initialValue)
     {
-        using var form = new Form
-        {
-            Text = title,
-            StartPosition = FormStartPosition.CenterParent,
-            FormBorderStyle = FormBorderStyle.FixedDialog,
-            MinimizeBox = false,
-            MaximizeBox = false,
-            ShowInTaskbar = false,
-            ClientSize = new Size(320, 110),
-            AutoScaleMode = AutoScaleMode.Dpi
-        };
+        using var form = FixedDialog.Create(title, 320, 110);
 
         var labelControl = new Label { Text = label, AutoSize = true, Location = new Point(12, 15) };
         var textBox = new TextBox { Text = initialValue, Location = new Point(12, 35), Width = 296 };

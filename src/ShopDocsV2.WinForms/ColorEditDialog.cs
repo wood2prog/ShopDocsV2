@@ -13,17 +13,7 @@ internal static class ColorEditDialog
     /// <summary>Returns the new "#RRGGBB" value, "" to clear the color, or null if the user cancelled.</summary>
     public static string? Show(IWin32Window? owner, string finishName, string? currentHex)
     {
-        using var form = new Form
-        {
-            Text = $"Edit Color - {finishName}",
-            StartPosition = FormStartPosition.CenterParent,
-            FormBorderStyle = FormBorderStyle.FixedDialog,
-            MinimizeBox = false,
-            MaximizeBox = false,
-            ShowInTaskbar = false,
-            ClientSize = new Size(320, 190),
-            AutoScaleMode = AutoScaleMode.Dpi
-        };
+        using var form = FixedDialog.Create($"Edit Color - {finishName}", 320, 190);
 
         var hexLabel = new Label { Text = "Hex:", AutoSize = true, Location = new Point(12, 16) };
         var hexTextBox = new TextBox { Location = new Point(60, 12), Width = 248, PlaceholderText = "e.g. #EDEAE0" };

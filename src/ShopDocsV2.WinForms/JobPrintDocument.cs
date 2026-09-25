@@ -13,7 +13,6 @@ internal sealed class JobPrintDocument : PrintDocument
 {
     private readonly PrintableJobSpec _spec;
     private readonly Font _titleFont = new("Segoe UI", 16, FontStyle.Bold);
-    private readonly Font _headerFont = new("Segoe UI", 10);
     private readonly Font _roomTitleFont = new("Segoe UI", 14, FontStyle.Bold);
     private readonly Font _sectionTitleFont = new("Segoe UI", 11, FontStyle.Bold);
     private readonly Font _normalFont = new("Segoe UI", 10);
@@ -61,7 +60,6 @@ internal sealed class JobPrintDocument : PrintDocument
         if (disposing)
         {
             _titleFont.Dispose();
-            _headerFont.Dispose();
             _roomTitleFont.Dispose();
             _sectionTitleFont.Dispose();
             _normalFont.Dispose();
@@ -82,9 +80,9 @@ internal sealed class JobPrintDocument : PrintDocument
         Add(DocumentName, _titleFont, 0, keepWithNext: _spec.HeaderFields.Count > 0);
         foreach (var (label, value) in _spec.HeaderFields)
         {
-            Add($"{label}: {value}", _headerFont, 0);
+            Add($"{label}: {value}", _normalFont, 0);
         }
-        Add("", _headerFont, 0);
+        Add("", _normalFont, 0);
 
         foreach (var (roomName, sections) in _spec.Rooms)
         {
