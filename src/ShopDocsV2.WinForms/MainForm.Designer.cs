@@ -15,6 +15,9 @@ partial class MainForm
     private ToolStripMenuItem addRoomMenuItem = null!;
     private ToolStripMenuItem renameRoomMenuItem = null!;
     private ToolStripMenuItem removeRoomMenuItem = null!;
+    private ToolStripMenuItem nextRoomMenuItem = null!;
+    private ToolStripMenuItem previousRoomMenuItem = null!;
+    private ToolStripMenuItem goToGroupMenuItem = null!;
     private ToolStripMenuItem exportMenuItem = null!;
     private ToolStripMenuItem printPreviewMenuItem = null!;
     private ToolStripMenuItem printMenuItem = null!;
@@ -24,6 +27,7 @@ partial class MainForm
     private ToolStripMenuItem toolsMenuItem = null!;
     private ToolStripMenuItem catalogManagerMenuItem = null!;
     private ToolStripMenuItem reloadQuestionsMenuItem = null!;
+    private ToolStripMenuItem keyboardShortcutsMenuItem = null!;
     private ToolStripMenuItem aboutMenuItem = null!;
     private StatusStrip statusStrip = null!;
     private ToolStripStatusLabel statusLabel = null!;
@@ -54,6 +58,9 @@ partial class MainForm
         addRoomMenuItem = new ToolStripMenuItem();
         renameRoomMenuItem = new ToolStripMenuItem();
         removeRoomMenuItem = new ToolStripMenuItem();
+        nextRoomMenuItem = new ToolStripMenuItem();
+        previousRoomMenuItem = new ToolStripMenuItem();
+        goToGroupMenuItem = new ToolStripMenuItem();
         exportMenuItem = new ToolStripMenuItem();
         printPreviewMenuItem = new ToolStripMenuItem();
         printMenuItem = new ToolStripMenuItem();
@@ -63,6 +70,7 @@ partial class MainForm
         toolsMenuItem = new ToolStripMenuItem();
         catalogManagerMenuItem = new ToolStripMenuItem();
         reloadQuestionsMenuItem = new ToolStripMenuItem();
+        keyboardShortcutsMenuItem = new ToolStripMenuItem();
         aboutMenuItem = new ToolStripMenuItem();
         statusStrip = new StatusStrip();
         statusLabel = new ToolStripStatusLabel();
@@ -108,10 +116,16 @@ partial class MainForm
         [
             addRoomMenuItem,
             renameRoomMenuItem,
-            removeRoomMenuItem
+            removeRoomMenuItem,
+            new ToolStripSeparator(),
+            nextRoomMenuItem,
+            previousRoomMenuItem,
+            new ToolStripSeparator(),
+            goToGroupMenuItem
         ]);
 
         addRoomMenuItem.Text = "&Add Room";
+        addRoomMenuItem.ShortcutKeys = Keys.Control | Keys.R;
         addRoomMenuItem.Click += AddRoomMenuItem_Click;
 
         renameRoomMenuItem.Text = "Re&name Room...";
@@ -119,6 +133,17 @@ partial class MainForm
 
         removeRoomMenuItem.Text = "&Remove Room";
         removeRoomMenuItem.Click += RemoveRoomMenuItem_Click;
+
+        nextRoomMenuItem.Text = "Ne&xt Room";
+        nextRoomMenuItem.ShortcutKeys = Keys.Control | Keys.Tab;
+        nextRoomMenuItem.Click += NextRoomMenuItem_Click;
+
+        previousRoomMenuItem.Text = "&Previous Room";
+        previousRoomMenuItem.ShortcutKeys = Keys.Control | Keys.Shift | Keys.Tab;
+        previousRoomMenuItem.Click += PreviousRoomMenuItem_Click;
+
+        // Filled with one item per List question when the question set loads (RebuildGoToGroupMenu).
+        goToGroupMenuItem.Text = "&Go to Group";
 
         // exportMenuItem
         exportMenuItem.Text = "&Export";
@@ -153,7 +178,9 @@ partial class MainForm
         toolsMenuItem.DropDownItems.AddRange(
         [
             catalogManagerMenuItem,
-            reloadQuestionsMenuItem
+            reloadQuestionsMenuItem,
+            new ToolStripSeparator(),
+            keyboardShortcutsMenuItem
         ]);
 
         catalogManagerMenuItem.Text = "&Catalog Manager...";
@@ -161,6 +188,9 @@ partial class MainForm
 
         reloadQuestionsMenuItem.Text = "&Reload Questions";
         reloadQuestionsMenuItem.Click += ReloadQuestionsMenuItem_Click;
+
+        keyboardShortcutsMenuItem.Text = "&Keyboard Shortcuts...";
+        keyboardShortcutsMenuItem.Click += KeyboardShortcutsMenuItem_Click;
 
         // aboutMenuItem: right-aligned info icon. U+E946 is the "Info" glyph in Segoe MDL2 Assets.
         aboutMenuItem.Text = "";

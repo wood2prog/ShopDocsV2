@@ -26,6 +26,7 @@ static class Program
         services.AddSingleton(new HttpClient());
         services.AddSingleton<IPaintColorLookupService, CompositePaintColorClient>();
         services.AddSingleton<IOrdxExportService, OrdxExportService>();
+        services.AddSingleton<IKeyBindingStore, KeyBindingSettingsStore>();
         services.AddTransient<MainForm>();
 
         using var provider = services.BuildServiceProvider();

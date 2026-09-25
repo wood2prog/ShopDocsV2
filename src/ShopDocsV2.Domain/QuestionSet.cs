@@ -55,6 +55,12 @@ public sealed class QuestionDef
 
     /// <summary>Appended to this field's value inside its PrintGroup, e.g. "W" in "30W".</summary>
     public string? PrintSuffix { get; set; }
+
+    /// <summary>
+    /// Only used when Type == List: the default key for jumping to this list and starting a new line, e.g. "Ctrl+F".
+    /// The user can rebind it under Tools &gt; Keyboard Shortcuts.
+    /// </summary>
+    public string? Shortcut { get; set; }
 }
 
 public sealed class ShowIfCondition
