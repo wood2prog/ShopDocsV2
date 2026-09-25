@@ -78,11 +78,12 @@ internal sealed class JobPrintDocument : PrintDocument
     private List<PrintLine> BuildLines(Graphics measureGraphics, int contentWidth)
     {
         var lines = new List<PrintLine>();
+        var block = -1; // -1 for the job header, then the room's index.
 
         void Add(string text, Font font, float indent, bool keepWithNext = false)
         {
             var height = measureGraphics.MeasureString(text.Length == 0 ? " " : text, font, Math.Max(1, contentWidth - (int)indent)).Height;
-            lines.Add(new PrintLine(text, font, indent, keepWithNext, height));
+            lines.Add(new PrintLine(text, font, indent, keepWithNext, height, block));
         }
 
         Add(DocumentName, _titleFont, 0, keepWithNext: _spec.HeaderFields.Count > 0);
@@ -95,10 +96,11 @@ internal sealed class JobPrintDocument : PrintDocument
         for (var roomIndex = 0; roomIndex < _spec.Rooms.Count; roomIndex++)
         {
             var (roomName, sections) = _spec.Rooms[roomIndex];
+            block = roomIndex;
             if (roomIndex > 0)
             {
                 var separatorHeight = measureGraphics.MeasureString(" ", _normalFont).Height;
-                lines.Add(new PrintLine("", _normalFont, 0, false, separatorHeight, IsSeparator: true));
+                lines.Add(new PrintLine("", _normalFont, 0, false, separatorHeight, block, IsSeparator: true));
             }
 
             Add(roomName, _roomTitleFont, 0, keepWithNext: true);
@@ -132,7 +134,9 @@ internal sealed class JobPrintDocument : PrintDocument
 
     /// <summary>
     /// Bin-packs lines into pages; a line marked KeepWithNext is pushed to the next page if it would otherwise land as the last line on this one.
-    /// A room separator that doesn't fit is dropped rather than printed at the top of the next page, where the page break already separates the rooms.
+    /// A room that doesn't fit in what's left of the page starts a new page, unless it's too tall for a page of its own, in which case it splits
+    /// line by line. A room separator that doesn't fit is dropped rather than printed at the top of the next page, where the page break already
+    /// separates the rooms.
     /// </summary>
     private static List<List<PrintLine>> Paginate(List<PrintLine> lines, int pageHeight)
     {
@@ -143,6 +147,23 @@ internal sealed class JobPrintDocument : PrintDocument
         for (var i = 0; i < lines.Count; i++)
         {
             var line = lines[i];
+
+            if (currentPage.Count > 0 && (i == 0 || lines[i - 1].Block != line.Block))
+            {
+                var blockHeight = lines.Skip(i).TakeWhile(l => l.Block == line.Block).Sum(l => l.Height);
+                var heightOnNewPage = blockHeight - (line.IsSeparator ? line.Height : 0);
+                if (currentHeight + blockHeight > pageHeight && heightOnNewPage <= pageHeight)
+                {
+                    pages.Add(currentPage);
+                    currentPage = [];
+                    currentHeight = 0;
+                    if (line.IsSeparator)
+                    {
+                        continue;
+                    }
+                }
+            }
+
             var fits = currentHeight + line.Height <= pageHeight;
 
             if (fits && line.KeepWithNext && i + 1 < lines.Count &&
@@ -175,5 +196,5 @@ internal sealed class JobPrintDocument : PrintDocument
         return pages.Count > 0 ? pages : [[]];
     }
 
-    private readonly record struct PrintLine(string Text, Font Font, float IndentX, bool KeepWithNext, float Height, bool IsSeparator = false);
+    private readonly record struct PrintLine(string Text, Font Font, float IndentX, bool KeepWithNext, float Height, int Block, bool IsSeparator = false);
 }
