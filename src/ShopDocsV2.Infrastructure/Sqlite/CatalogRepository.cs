@@ -37,6 +37,7 @@ public sealed class CatalogRepository(SqliteConnectionFactory connectionFactory)
         CatalogList.Materials => "catalog_materials",
         CatalogList.Pulls => "catalog_pulls",
         CatalogList.HardwareColors => "catalog_hardware_colors",
+        CatalogList.DoorStyles => "catalog_door_styles",
         _ => throw new ArgumentOutOfRangeException(nameof(list), list, null)
     };
 

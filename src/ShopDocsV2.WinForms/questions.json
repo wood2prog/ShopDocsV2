@@ -10,7 +10,7 @@
           "options": ["Framed", "Frameless"],
           "default": "Framed"
         },
-        { "id": "cabinet_door_style", "label": "Door Style", "type": "select", "options": ["Shaker", "Raised Panel"] },
+        { "id": "cabinet_door_style", "label": "Door Style", "type": "select", "catalogSource": "door_styles" },
         { "id": "cabinet_drawer_style", "label": "Drawer Front Style", "type": "select", "options": ["Slab", "Five Piece"] },
         { "id": "soft_close", "label": "Soft-close hinges/slides", "type": "checkbox" },
         {

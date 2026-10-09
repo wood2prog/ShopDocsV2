@@ -26,7 +26,7 @@ public sealed class QuestionDef
     public string? Default { get; set; }
     public ShowIfCondition? ShowIf { get; set; }
 
-    /// <summary>Name of a catalog list to source dropdown options from: materials/finishes/countertops/pulls/hardware_colors/accessories.</summary>
+    /// <summary>Name of a catalog list to source dropdown options from: materials/finishes/countertops/pulls/hardware_colors/door_styles/accessories.</summary>
     public string? CatalogSource { get; set; }
 
     /// <summary>Id of a sibling field whose value narrows CatalogSource (only countertops.color -&gt; material today).</summary>

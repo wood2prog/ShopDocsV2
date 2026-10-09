@@ -23,7 +23,7 @@ public class SchemaInitializerTests : IDisposable
         Assert.Equal(
             new[]
             {
-                "catalog_accessories", "catalog_countertop_colors", "catalog_finishes", "catalog_hardware_colors",
+                "catalog_accessories", "catalog_countertop_colors", "catalog_door_styles", "catalog_finishes", "catalog_hardware_colors",
                 "catalog_materials", "catalog_pulls", "jobs", "room_answers",
                 "room_list_item_values", "room_list_items", "rooms", "schema_version"
             },
@@ -33,6 +33,7 @@ public class SchemaInitializerTests : IDisposable
         Assert.Equal(263, connection.ExecuteScalar<int>("SELECT COUNT(*) FROM catalog_finishes"));
         Assert.Equal(1, connection.ExecuteScalar<int>("SELECT COUNT(*) FROM catalog_pulls"));
         Assert.Equal(6, connection.ExecuteScalar<int>("SELECT COUNT(*) FROM catalog_hardware_colors"));
+        Assert.Equal(2, connection.ExecuteScalar<int>("SELECT COUNT(*) FROM catalog_door_styles"));
         Assert.Equal(40 + 14, connection.ExecuteScalar<int>("SELECT COUNT(*) FROM catalog_countertop_colors"));
         Assert.Equal(1, connection.ExecuteScalar<int>("SELECT COUNT(*) FROM schema_version"));
         Assert.Equal(1, connection.ExecuteScalar<int>("SELECT version FROM schema_version"));
@@ -70,6 +71,24 @@ public class SchemaInitializerTests : IDisposable
         using var check = factory.Create();
         Assert.Equal(0, check.ExecuteScalar<int>(
             "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name IN ('catalog_hinges', 'catalog_guides')"));
+    }
+
+    [Fact]
+    public void Initialize_OlderDatabaseWithoutDoorStyles_SeedsDefaultsOnce()
+    {
+        var factory = new SqliteConnectionFactory(_dbPath);
+        var initializer = new SchemaInitializer(factory);
+        initializer.Initialize();
+        using (var connection = factory.Create())
+        {
+            connection.Execute("DELETE FROM catalog_door_styles");
+        }
+
+        initializer.Initialize();
+        initializer.Initialize();
+
+        using var check = factory.Create();
+        Assert.Equal(["Shaker", "Raised Panel"], check.Query<string>("SELECT name FROM catalog_door_styles ORDER BY sort_order"));
     }
 
     public void Dispose()

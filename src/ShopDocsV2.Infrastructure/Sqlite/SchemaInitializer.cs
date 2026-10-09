@@ -22,17 +22,35 @@ public sealed class SchemaInitializer(SqliteConnectionFactory connectionFactory)
             schemaCommand.ExecuteNonQuery();
         }
 
+        var catalogSeedJson = ReadEmbeddedResourceText(CatalogSeedResourceName);
         if (connection.ExecuteScalar<int?>("SELECT version FROM schema_version LIMIT 1") is null)
         {
-            SeedCatalog(connection, ReadEmbeddedResourceText(CatalogSeedResourceName));
+            SeedCatalog(connection, catalogSeedJson);
             connection.Execute("INSERT INTO schema_version (version) VALUES (1)");
+        }
+        else if (connection.ExecuteScalar<int>($"SELECT COUNT(*) FROM {CatalogRepository.TableFor(CatalogList.DoorStyles)}") == 0)
+        {
+            // Door styles arrived after the first release; give older databases the defaults.
+            // Note this also refills the list if a user deletes every door style.
+            SeedDoorStyles(connection, catalogSeedJson);
         }
     }
 
+    private static void SeedDoorStyles(SqliteConnection connection, string catalogSeedJson)
+    {
+        var seed = DeserializeSeed(catalogSeedJson);
+        using var transaction = connection.BeginTransaction();
+        InsertNamed(connection, transaction, CatalogRepository.TableFor(CatalogList.DoorStyles), seed.DoorStyles);
+        transaction.Commit();
+    }
+
+    private static CatalogSeedDto DeserializeSeed(string catalogSeedJson) =>
+        JsonSerializer.Deserialize<CatalogSeedDto>(catalogSeedJson)
+            ?? throw new InvalidOperationException("Catalog seed resource is empty or malformed.");
+
     private static void SeedCatalog(SqliteConnection connection, string catalogSeedJson)
     {
-        var seed = JsonSerializer.Deserialize<CatalogSeedDto>(catalogSeedJson)
-            ?? throw new InvalidOperationException("Catalog seed resource is empty or malformed.");
+        var seed = DeserializeSeed(catalogSeedJson);
 
         using var transaction = connection.BeginTransaction();
 
@@ -40,6 +58,7 @@ public sealed class SchemaInitializer(SqliteConnectionFactory connectionFactory)
         InsertNamed(connection, transaction, "catalog_finishes", seed.Finishes);
         InsertNamed(connection, transaction, CatalogRepository.TableFor(CatalogList.Pulls), seed.Pulls);
         InsertNamed(connection, transaction, CatalogRepository.TableFor(CatalogList.HardwareColors), seed.HardwareColors);
+        InsertNamed(connection, transaction, CatalogRepository.TableFor(CatalogList.DoorStyles), seed.DoorStyles);
 
         var sortOrder = 0;
         foreach (var (materialName, colorNames) in seed.Countertops)
@@ -92,5 +111,8 @@ public sealed class SchemaInitializer(SqliteConnectionFactory connectionFactory)
 
         [JsonPropertyName("hardware_colors")]
         public List<string> HardwareColors { get; set; } = new();
+
+        [JsonPropertyName("door_styles")]
+        public List<string> DoorStyles { get; set; } = new();
     }
 }

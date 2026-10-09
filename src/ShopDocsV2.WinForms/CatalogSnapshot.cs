@@ -50,6 +50,7 @@ internal sealed class CatalogSnapshot
         "materials" => CatalogList.Materials,
         "pulls" => CatalogList.Pulls,
         "hardware_colors" => CatalogList.HardwareColors,
+        "door_styles" => CatalogList.DoorStyles,
         _ => null
     };
 

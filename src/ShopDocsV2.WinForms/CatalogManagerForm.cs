@@ -33,6 +33,7 @@ public partial class CatalogManagerForm : Form
         await materialsGrid.BindAsync(_catalogRepository, CatalogList.Materials);
         await pullsGrid.BindAsync(_catalogRepository, CatalogList.Pulls);
         await hardwareColorsGrid.BindAsync(_catalogRepository, CatalogList.HardwareColors);
+        await doorStylesGrid.BindAsync(_catalogRepository, CatalogList.DoorStyles);
         await finishesGrid.BindAsync(_catalogRepository, _paintColorLookupService);
         await countertopColorsGrid.BindAsync(_catalogRepository, _questionSet);
         await accessoriesGrid.BindAsync(_catalogRepository);
@@ -59,6 +60,7 @@ public partial class CatalogManagerForm : Form
             (countertopColorsTabPage, countertopColorsGrid.Grid, ["Color"], ["Material"]),
             (pullsTabPage, pullsGrid.Grid, ["Name"], []),
             (hardwareColorsTabPage, hardwareColorsGrid.Grid, ["Name"], []),
+            (doorStylesTabPage, doorStylesGrid.Grid, ["Name"], []),
             (accessoriesTabPage, accessoriesGrid.Grid, ["Name", "Model"], ["Model", "Name"])
         };
 

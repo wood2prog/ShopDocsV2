@@ -13,6 +13,7 @@ partial class CatalogManagerForm
     private TabPage countertopColorsTabPage = null!;
     private TabPage pullsTabPage = null!;
     private TabPage hardwareColorsTabPage = null!;
+    private TabPage doorStylesTabPage = null!;
     private TabPage accessoriesTabPage = null!;
 
     private SimpleCatalogGrid materialsGrid = null!;
@@ -20,6 +21,7 @@ partial class CatalogManagerForm
     private CountertopColorsGrid countertopColorsGrid = null!;
     private SimpleCatalogGrid pullsGrid = null!;
     private SimpleCatalogGrid hardwareColorsGrid = null!;
+    private SimpleCatalogGrid doorStylesGrid = null!;
     private AccessoriesGrid accessoriesGrid = null!;
 
     protected override void Dispose(bool disposing)
@@ -44,6 +46,7 @@ partial class CatalogManagerForm
         countertopColorsTabPage = new TabPage("Countertop Colors");
         pullsTabPage = new TabPage("Pulls");
         hardwareColorsTabPage = new TabPage("Hardware Colors");
+        doorStylesTabPage = new TabPage("Door Styles");
         accessoriesTabPage = new TabPage("Accessories");
 
         materialsGrid = new SimpleCatalogGrid();
@@ -51,6 +54,7 @@ partial class CatalogManagerForm
         countertopColorsGrid = new CountertopColorsGrid();
         pullsGrid = new SimpleCatalogGrid();
         hardwareColorsGrid = new SimpleCatalogGrid();
+        doorStylesGrid = new SimpleCatalogGrid();
         accessoriesGrid = new AccessoriesGrid();
 
         SuspendLayout();
@@ -60,6 +64,7 @@ partial class CatalogManagerForm
         countertopColorsTabPage.Controls.Add(countertopColorsGrid);
         pullsTabPage.Controls.Add(pullsGrid);
         hardwareColorsTabPage.Controls.Add(hardwareColorsGrid);
+        doorStylesTabPage.Controls.Add(doorStylesGrid);
         accessoriesTabPage.Controls.Add(accessoriesGrid);
 
         tabControl.Dock = DockStyle.Fill;
@@ -70,6 +75,7 @@ partial class CatalogManagerForm
             countertopColorsTabPage,
             pullsTabPage,
             hardwareColorsTabPage,
+            doorStylesTabPage,
             accessoriesTabPage
         ]);
 

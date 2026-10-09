@@ -352,5 +352,9 @@
     "Champagne Bronze",
     "Oil Rubbed Bronze",
     "Pewter"
+  ],
+  "door_styles": [
+    "Shaker",
+    "Raised Panel"
   ]
 }
